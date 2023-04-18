@@ -69,9 +69,10 @@ public class World : MonoBehaviour
         {
             dataDictionary = await CalculateWorldChunkData(worldGenerationData.chunkDataPositionsToCreate);
         }
-        catch (Exception)
+        catch (Exception a)
         {
-            Debug.Log("Task canceled");
+            Debug.Log("Task cancelada");
+            Debug.Log(a);
             return;
         }
         

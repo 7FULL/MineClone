@@ -11,7 +11,7 @@ public class PlayerController3D : MonoBehaviour
     public float gravity = 20.0f;
     public Camera playerCamera;
     public float lookSpeed = 2.0f;
-    public float lookXLimit = 45.0f;
+    public float lookXLimit = 43.0f;
 
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
@@ -25,6 +25,7 @@ public class PlayerController3D : MonoBehaviour
     [SerializeField] private float reachDistance = 5;
     
     [SerializeField]private LayerMask groundMask;
+    [SerializeField]private float minDistanceToPlace = 0.48f;
 
     void Start()
     {
@@ -96,14 +97,15 @@ public class PlayerController3D : MonoBehaviour
                 //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
                 if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
                     Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0.5f,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-0.5f,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0.5f)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-0.5f)) &&
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0.5f,0,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-0.5f,0,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,0.5f)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-0.5f)))
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                 {
                     ModifyTerrain(hit, BlockType.Dirt, aux);
                 }
