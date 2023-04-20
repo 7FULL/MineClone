@@ -31,7 +31,7 @@ public class StoneLayerHandler : BlockLayerHandler
             for (int i = chunkData.worldPosition.y; i <= endPosition; i++)
             {
                 Vector3Int pos = new Vector3Int(x, i, z);
-                Chunk.SetBlock(chunkData, pos, BlockType.Stone);
+                Chunk.SetBlock(chunkData, pos, BlockType.STONE);
             }
             return true;
         }

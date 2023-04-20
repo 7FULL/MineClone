@@ -5,6 +5,7 @@ using UnityEngine;
 public class ChunkData
 {
     public BlockType[] blocks;
+
     public int chunkSize = 16;
     public int chunkHeight = 100;
     public World worldReference;

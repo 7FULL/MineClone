@@ -13,6 +13,10 @@ public class PlayerController3D : MonoBehaviour
     public float lookSpeed = 2.0f;
     public float lookXLimit = 43.0f;
 
+    public Sprite[] romperFotos;
+
+    public GameObject romperSprite;
+
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
     float rotationX = 0;
@@ -27,6 +31,9 @@ public class PlayerController3D : MonoBehaviour
     [SerializeField]private LayerMask groundMask;
     [SerializeField]private float minDistanceToPlace = 0.48f;
 
+    private Vector3Int lookingBlockPos;
+    private Vector3Int lastBlockPos;
+
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -38,6 +45,8 @@ public class PlayerController3D : MonoBehaviour
         Cursor.visible = false;
 
         world = FindObjectOfType<World>();
+        
+        romperSprite.transform.SetParent(world.transform);
     }
 
     void Update()
@@ -82,8 +91,39 @@ public class PlayerController3D : MonoBehaviour
             
             if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
             {
-                ModifyTerrain(hit, BlockType.Air);
+                ModifyTerrain(hit, BlockType.AIR);
             }
+        }
+        
+        if (Input.GetKey(KeyCode.F))
+        {
+            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+            
+            if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
+            {
+                romperSprite.gameObject.SetActive(true);
+                
+                romperSprite.transform.rotation = Quaternion.identity;
+                
+                BlockType blockType = world.GetBlock(hit);
+                
+                lookingBlockPos = world.GetBlockPos(hit);
+
+                if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && lookingBlockPos != lastBlockPos)
+                {
+                    romperSprite.transform.position = lookingBlockPos;
+                    lastBlockPos = lookingBlockPos;
+                }
+            }
+            else
+            {
+                romperSprite.SetActive(false);
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.F))
+        {
+            romperSprite.gameObject.SetActive(false);
         }
         
         if (Input.GetMouseButtonDown(1))
@@ -107,7 +147,7 @@ public class PlayerController3D : MonoBehaviour
                     Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                     Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                 {
-                    ModifyTerrain(hit, BlockType.Dirt, aux);
+                    ModifyTerrain(hit, BlockType.DIRT, aux);
                 }
             }
         }

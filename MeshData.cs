@@ -12,6 +12,9 @@ public class MeshData
     public List<int> colliderTriangles = new List<int>();
 
     public MeshData waterMesh;
+    
+    //public MeshData leavesMesh;
+    
     private bool isMainMesh = true;
 
     public MeshData(bool isMainMesh)
@@ -19,6 +22,7 @@ public class MeshData
         if (isMainMesh)
         {
             waterMesh = new MeshData(false);
+            //leavesMesh = new MeshData(false);
         }
     }
 
@@ -29,7 +33,6 @@ public class MeshData
         {
             colliderVertices.Add(vertex);
         }
-
     }
 
     public void AddQuadTriangles(bool quadGeneratesCollider)

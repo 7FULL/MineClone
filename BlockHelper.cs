@@ -17,7 +17,7 @@ public static class BlockHelper
     public static MeshData GetMeshData
         (ChunkData chunk, int x, int y, int z, MeshData meshData, BlockType blockType)
     {
-        if (blockType == BlockType.Air || blockType == BlockType.Nothing)
+        if (blockType == BlockType.AIR || blockType == BlockType.NOTHING)
             return meshData;
 
         foreach (Direction direction in directions)
@@ -25,12 +25,14 @@ public static class BlockHelper
             Vector3Int neighbourBlockCoordinates = new Vector3Int(x, y, z) + direction.GetVector();
             BlockType neighbourBlockType = Chunk.GetBlockFromChunkCoordinates(chunk, neighbourBlockCoordinates);
 
-            if (neighbourBlockType != BlockType.Nothing && BlockDataManager.blockTextureDataDictionary[neighbourBlockType].isSolid == false)
+            if (neighbourBlockType != BlockType.NOTHING && BlockDataManager.blockTextureDataDictionary[neighbourBlockType].isSolid == false)
             {
-
-                if (blockType == BlockType.Water)
+                /*if (blockType == BlockType.TREE_LEAFS_SOLID)
                 {
-                    if (neighbourBlockType == BlockType.Air)
+                    meshData.leavesMesh = GetFaceDataIn(direction, chunk, x, y, z, meshData.leavesMesh, blockType);
+                }else */if (blockType == BlockType.WATER)
+                {
+                    if (neighbourBlockType == BlockType.AIR)
                         meshData.waterMesh = GetFaceDataIn(direction, chunk, x, y, z, meshData.waterMesh, blockType);
                 }
                 else

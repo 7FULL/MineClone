@@ -97,9 +97,10 @@ public class World : MonoBehaviour
         {
             meshDataDictionary = await CreateMeshDataAsync(dataToRender);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            Debug.Log("Task canceled");
+            Debug.Log("Tarea cancelada debido a:");
+            Debug.Log(e);
             return;
         }
 
@@ -110,7 +111,7 @@ public class World : MonoBehaviour
     {
         foreach (Vector3Int treeLeafes in chunkData.treeData.treeLeafesSolid)
         {
-            Chunk.SetBlock(chunkData, treeLeafes, BlockType.TreeLeafsSolid);
+            Chunk.SetBlock(chunkData, treeLeafes, BlockType.TREE_LEAFS_SOLID);
         }
     }
 
@@ -149,6 +150,7 @@ public class World : MonoBehaviour
                 }
                 ChunkData data = new ChunkData(chunkSize, chunkHeight, this, pos);
                 ChunkData newData = terrainGenerator.GenerateChunkData(data, mapSeedOffset);
+
                 dictionary.TryAdd(pos, newData);
             }
             return dictionary;
@@ -180,6 +182,15 @@ public class World : MonoBehaviour
 
     }
 
+    internal BlockType GetBlock(RaycastHit hit)
+    {
+        ChunkRenderer chunk = hit.collider.GetComponent<ChunkRenderer>();
+
+        Vector3Int pos = GetBlockPos(hit);
+
+        return WorldDataHelper.GetBlock(chunk.ChunkData.worldReference, pos);
+    }
+    
     internal bool SetBlock(RaycastHit hit, BlockType blockType)
     {
         ChunkRenderer chunk = hit.collider.GetComponent<ChunkRenderer>();
@@ -215,13 +226,15 @@ public class World : MonoBehaviour
             return false;
 
         Vector3Int pos = GetBlockPos(posAColocar);
+        Vector3Int posHit = GetBlockPos(hit);
 
         WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
         chunk.ModifiedByThePlayer = true;
 
-        if (Chunk.IsOnEdge(chunk.ChunkData, pos))
+        if (Chunk.IsOnEdge(chunk.ChunkData, posHit))
         {
-            List<ChunkData> neighbourDataList = Chunk.GetEdgeNeighbourChunk(chunk.ChunkData, pos);
+            
+            List<ChunkData> neighbourDataList = Chunk.GetEdgeNeighbourChunk(chunk.ChunkData, posHit);
             foreach (ChunkData neighbourData in neighbourDataList)
             {
                 //neighbourData.modifiedByThePlayer = true;
@@ -229,14 +242,13 @@ public class World : MonoBehaviour
                 if (chunkToUpdate != null)
                     chunkToUpdate.UpdateChunk();
             }
-
         }
 
         chunk.UpdateChunk();
         return true;
     }
 
-    private Vector3Int GetBlockPos(RaycastHit hit)
+    public Vector3Int GetBlockPos(RaycastHit hit)
     {
         Vector3 pos = new Vector3(
              GetBlockPositionIn(hit.point.x, hit.normal.x),
@@ -290,7 +302,7 @@ public class World : MonoBehaviour
 
     internal async void LoadAdditionalChunksRequest(GameObject player)
     {
-        Debug.Log("Load more chunks");
+        //Debug.Log("Load more chunks");
         await GenerateWorld(Vector3Int.RoundToInt(player.transform.position));
         OnNewChunksGenerated?.Invoke();
     }
@@ -303,7 +315,7 @@ public class World : MonoBehaviour
         worldData.chunkDataDictionary.TryGetValue(pos, out containerChunk);
 
         if (containerChunk == null)
-            return BlockType.Nothing;
+            return BlockType.NOTHING;
         Vector3Int blockInCHunkCoordinates = Chunk.GetBlockInChunkCoordinates(containerChunk, new Vector3Int(x, y, z));
         return Chunk.GetBlockFromChunkCoordinates(containerChunk, blockInCHunkCoordinates);
     }

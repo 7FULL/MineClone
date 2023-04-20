@@ -9,7 +9,7 @@ public class AirLayerHandler : BlockLayerHandler
         if (y > surfaceHeightNoise)
         {
             Vector3Int pos = new Vector3Int(x, y, z);
-            Chunk.SetBlock(chunkData, pos, BlockType.Air);
+            Chunk.SetBlock(chunkData, pos, BlockType.AIR);
             return true;
         }
         return false;

@@ -54,14 +54,13 @@ public class TreeLayerHandler : BlockLayerHandler
         {
             Vector3Int chunkCoordinates = new Vector3Int(x, surfaceHeightNoise, z);
             BlockType type = Chunk.GetBlockFromChunkCoordinates(chunkData, chunkCoordinates);
-            if (type == BlockType.Grass_Dirt)
+            if (type == BlockType.GRASS_DIRT)
             {
-                
-                Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.Dirt);
+                Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.DIRT);
                 for (int i = 1; i < 5; i++)
                 {
                     chunkCoordinates.y = surfaceHeightNoise + i;
-                    Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.TreeTrunk);
+                    Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.TREE_TRUNK);
                 }
                 foreach (Vector3Int leafPosition in treeLeafesStaticLayout)
                 {

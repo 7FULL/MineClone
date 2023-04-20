@@ -108,6 +108,21 @@ public static class WorldDataHelper
             Chunk.SetBlock(chunkData, localPosition, blockType);
         }
     }
+    
+    internal static BlockType GetBlock(World worldReference, Vector3Int worldBlockPosition)
+    {
+        ChunkData chunkData = GetChunkData(worldReference, worldBlockPosition);
+        if (chunkData != null)
+        {
+            Vector3Int localPosition = Chunk.GetBlockInChunkCoordinates(chunkData, worldBlockPosition);
+            return Chunk.GetBlock(chunkData, localPosition);
+        }
+
+        else
+        {
+            return BlockType.NOTHING;
+        }
+    }
 
     public static ChunkData GetChunkData(World worldReference, Vector3Int worldBlockPosition)
     {

@@ -7,15 +7,17 @@ using UnityEngine;
 public class BlockDataSO : ScriptableObject
 {
     public float textureSizeX, textureSizeY;
-    public List<TextureData> textureDataList;
+    public List<Block> blockDataList;
 }
 
 [Serializable]
-public class TextureData
+public class Block
 {
     public BlockType blockType;
     public Vector2 up, down, side;
     public bool isSolid = true;
     public bool generatesCollider = true;
+
+    public int durability = 0;
 }
 

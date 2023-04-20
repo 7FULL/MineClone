@@ -4,15 +4,15 @@ using UnityEngine;
 
 public enum BlockType
 {
-    Nothing,
-    Air,
-    Grass_Dirt,
-    Dirt,
-    Grass_Stone,
-    Stone,
-    TreeTrunk,
-    TreeLeafesTransparent,
-    TreeLeafsSolid,
-    Water,
-    Sand
+    NOTHING,
+    AIR,
+    GRASS_DIRT,
+    DIRT,
+    GRASS_STONE,
+    STONE,
+    TREE_TRUNK,
+    TREE_LEAFES_TRANSPARENT,
+    TREE_LEAFS_SOLID,
+    WATER,
+    SAND
 }

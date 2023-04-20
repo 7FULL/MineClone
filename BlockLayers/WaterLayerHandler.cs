@@ -10,11 +10,11 @@ public class WaterLayerHandler : BlockLayerHandler
         if(y > surfaceHeightNoise && y <= waterLevel)
         {
             Vector3Int pos = new Vector3Int(x, y, z);
-            Chunk.SetBlock(chunkData, pos, BlockType.Water);
+            Chunk.SetBlock(chunkData, pos, BlockType.WATER);
             if(y == surfaceHeightNoise + 1)
             {
                 pos.y = surfaceHeightNoise;
-                Chunk.SetBlock(chunkData, pos, BlockType.Sand);
+                Chunk.SetBlock(chunkData, pos, BlockType.SAND);
             }
             return true;
         }
