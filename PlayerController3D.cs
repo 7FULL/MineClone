@@ -8,9 +8,13 @@ using UnityEngine.Tilemaps;
 
 public class PlayerController3D : MonoBehaviour
 {
+    public float maxSpeed = 9f;
+    
     public float walkingSpeed = 7.5f;
     public float runningSpeed = 11.5f;
     public float jumpSpeed = 8.0f;
+
+    public float gravity = 1f;
     
     /*--------------------------*/
     
@@ -59,6 +63,9 @@ public class PlayerController3D : MonoBehaviour
     
     Vector3 moveDirection = Vector3.zero;
 
+    private float auxX;
+    private float auxZ;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -78,9 +85,13 @@ public class PlayerController3D : MonoBehaviour
     {
         sprint = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
         
-        if (grounded.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        if (rb.velocity.magnitude < maxSpeed)
         {
-            rb.AddForce(jumpSpeed * Vector3.up,ForceMode.Impulse);
+            if (grounded.isGrounded && Input.GetKey(KeyCode.Space))
+            {
+                rb.AddForce(jumpSpeed * Vector3.up,ForceMode.Impulse);
+                grounded.isGrounded = false;
+            }
         }
         
         Vector3 forward = transform.TransformDirection(Vector3.forward);
@@ -89,9 +100,9 @@ public class PlayerController3D : MonoBehaviour
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
         float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
-
-        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
         
+        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+
         rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
         rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
         playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
@@ -183,8 +194,13 @@ public class PlayerController3D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rb.velocity = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z);
-        
+        if (rb.velocity.magnitude < maxSpeed)
+        {
+            rb.velocity = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z);
+
+            rb.AddForce(gravity * Vector3.down);
+        }
+
         if (!sprint)
         {
             if (playerCamera.fieldOfView > 60)

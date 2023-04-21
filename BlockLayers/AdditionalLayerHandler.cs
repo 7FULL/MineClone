@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StoneLayerHandler : BlockLayerHandler
+public class AdditionalLayerHandler : BlockLayerHandler
 {
     [Range(0, 1)]
-    public float stoneThreshold = 0.5f;
+    public float probability = 0.5f;
 
+    public BlockType blockType;
+    
     [SerializeField]
     private NoiseSettings stoneNoiseSettings;
 
@@ -26,12 +28,12 @@ public class StoneLayerHandler : BlockLayerHandler
             endPosition = chunkData.worldPosition.y + chunkData.chunkHeight;
         }
 
-        if (stoneNoise > stoneThreshold)
+        if (stoneNoise > probability)
         {
             for (int i = chunkData.worldPosition.y; i <= endPosition; i++)
             {
                 Vector3Int pos = new Vector3Int(x, i, z);
-                Chunk.SetBlock(chunkData, pos, BlockType.STONE);
+                Chunk.SetBlock(chunkData, pos, blockType);
             }
             return true;
         }

@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 659e71c10a9785e4ca6610234b347e2c, type: 3}
-  m_Name: StoneLayerNoiseSettings
+  m_Name: SandLayerNoiseSettings
   m_EditorClassIdentifier: 
-  noiseZoom: 0.01
+  noiseZoom: 0.1
   octaves: 1
   offest: {x: -3200, y: 100}
   worldOffset: {x: 0, y: 0}
-  persistance: 0.5
+  persistance: 0.9
   redistributionModifier: 1.2
   exponent: 4
