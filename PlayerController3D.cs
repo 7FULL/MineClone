@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -8,18 +11,17 @@ public class PlayerController3D : MonoBehaviour
     public float walkingSpeed = 7.5f;
     public float runningSpeed = 11.5f;
     public float jumpSpeed = 8.0f;
-    public float gravity = 20.0f;
+    
+    /*--------------------------*/
+    
     public Camera playerCamera;
     public float lookSpeed = 2.0f;
     public float lookXLimit = 43.0f;
-
+    
     public Sprite[] romperFotos;
 
     public GameObject romperSprite;
-
-    CharacterController characterController;
-    Vector3 moveDirection = Vector3.zero;
-    float rotationX = 0;
+    public GameObject romperParticulas;
 
     [HideInInspector]
     public bool canMove = true;
@@ -34,12 +36,33 @@ public class PlayerController3D : MonoBehaviour
     private Vector3Int lookingBlockPos;
     private Vector3Int lastBlockPos;
 
+    private bool breakingBlock = false;
+
+    private int resistanceBlock;
+    private int resistanceBlockAux;
+
+    private bool broken = false;
+
+    public BlockDataSO blockData;
+
+    public SpriteRenderer[] fotosSprites;
+
+    private Material auxParticleMaterial;
+    
+    float rotationX = 0;
+
+    private Grounded grounded;
+
+    private bool sprint = false;
+
+    private Rigidbody rb;
+    
+    Vector3 moveDirection = Vector3.zero;
+
     void Start()
     {
-        characterController = GetComponent<CharacterController>();
-
-        Time.timeScale = 1;
-
+        rb = GetComponent<Rigidbody>();
+        
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -47,72 +70,74 @@ public class PlayerController3D : MonoBehaviour
         world = FindObjectOfType<World>();
         
         romperSprite.transform.SetParent(world.transform);
+
+        grounded = GetComponentInChildren<Grounded>();
     }
 
     void Update()
     {
-	    Vector3 forward = transform.TransformDirection(Vector3.forward);
+        sprint = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        
+        if (grounded.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        {
+            rb.AddForce(jumpSpeed * Vector3.up,ForceMode.Impulse);
+        }
+        
+        Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
         
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
         float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
-        float movementDirectionY = moveDirection.y;
-        
+
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
-
-        if (Input.GetKey(KeyCode.Space) && canMove && characterController.isGrounded)
-        {
-            moveDirection.y = jumpSpeed;
-        }
-        else
-        {
-            moveDirection.y = movementDirectionY;
-        }
         
-        if (!characterController.isGrounded)
-        {
-            moveDirection.y -= gravity * Time.deltaTime;
-        }
-
-        characterController.Move(moveDirection * Time.deltaTime);
+        rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
+        rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         
-        if (canMove)
-        {
-            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
-        }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-            
-            if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
-            {
-                ModifyTerrain(hit, BlockType.AIR);
-            }
-        }
-        
-        if (Input.GetKey(KeyCode.F))
+        if (Input.GetMouseButton(0))
         {
             Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
             
             if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
             {
                 romperSprite.gameObject.SetActive(true);
-                
-                romperSprite.transform.rotation = Quaternion.identity;
-                
+
                 BlockType blockType = world.GetBlock(hit);
                 
                 lookingBlockPos = world.GetBlockPos(hit);
 
-                if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && lookingBlockPos != lastBlockPos)
+                if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && blockType != BlockType.WATER && lookingBlockPos != lastBlockPos)
                 {
+                    
+                    for (int i = 0; i < blockData.blockDataList.Count; i++)
+                    {
+                        if (blockData.blockDataList[i].blockType == blockType)
+                        {
+                            resistanceBlock = blockData.blockDataList[i].durability;
+                            auxParticleMaterial = blockData.blockDataList[i].particleSprite;
+                            resistanceBlockAux = resistanceBlock;
+                        }
+                    }
+                    
+                    breakingBlock = true;
+                    
                     romperSprite.transform.position = lookingBlockPos;
                     lastBlockPos = lookingBlockPos;
+                }
+
+                if (broken)
+                {
+                    GameObject x = Instantiate(romperParticulas, lookingBlockPos, Quaternion.identity);
+
+                    x.GetComponent<ParticleSystemRenderer>().material = auxParticleMaterial;
+
+                    Destroy(x,2);
+                    ModifyTerrain(hit, BlockType.AIR);
+                    breakingBlock = false;
+                    broken = false;
                 }
             }
             else
@@ -121,9 +146,12 @@ public class PlayerController3D : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyUp(KeyCode.F))
+        if (Input.GetMouseButtonUp(0))
         {
             romperSprite.gameObject.SetActive(false);
+            breakingBlock = false;
+            broken = false;
+            lastBlockPos = new Vector3Int(0, 20000, 0);
         }
         
         if (Input.GetMouseButtonDown(1))
@@ -152,7 +180,77 @@ public class PlayerController3D : MonoBehaviour
             }
         }
     }
-    
+
+    private void FixedUpdate()
+    {
+        rb.velocity = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z);
+        
+        if (!sprint)
+        {
+            if (playerCamera.fieldOfView > 60)
+            {
+                playerCamera.fieldOfView--;
+            }
+        }
+        else
+        {
+            if (playerCamera.fieldOfView < 65 && rb.velocity.magnitude > 3)
+            {
+                playerCamera.fieldOfView++;
+            }
+        }
+
+        if (rb.velocity.x < 3 && rb.velocity.z < 3)
+        {
+            if (playerCamera.fieldOfView > 60)
+            {
+                playerCamera.fieldOfView--;
+            }
+        }
+        
+        if (breakingBlock)
+        {
+            if (resistanceBlock > 0)
+            {
+                resistanceBlock--;
+            }
+
+            float x = resistanceBlockAux / romperFotos.Length;
+            
+
+            float[] y = new float[romperFotos.Length];
+
+            for (int i = 1; i < y.Length; i++)
+            {
+                y[i] = resistanceBlockAux - x*i;
+            }
+            
+            int indexFoto = 0;
+            
+            for (int i = 0; i < y.Length; i++)
+            {
+                if (resistanceBlock < y[i])
+                {
+                    indexFoto = i;
+                }
+            }
+
+            for (int i = 0; i < fotosSprites.Length; i++)
+            {
+                fotosSprites[i].sprite = romperFotos[indexFoto];
+            }
+            
+            if (resistanceBlock == 0)
+            {
+                broken = true;
+                for (int i = 0; i < fotosSprites.Length; i++)
+                {
+                    fotosSprites[i].sprite = romperFotos[0];
+                }
+            }
+        }
+    }
+
     private void ModifyTerrain(RaycastHit hit, BlockType blockType)
     {
         world.SetBlock(hit, blockType);

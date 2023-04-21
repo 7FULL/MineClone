@@ -18,6 +18,8 @@ public class Block
     public bool isSolid = true;
     public bool generatesCollider = true;
 
-    public int durability = 0;
+    public int durability = 1;
+
+    public Material particleSprite;
 }
 
