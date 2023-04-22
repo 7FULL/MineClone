@@ -27,6 +27,8 @@ public class World : MonoBehaviour
 
     public UnityEvent OnWorldCreated, OnNewChunksGenerated;
 
+    public BlockDataSO blockData;
+
     public WorldData worldData { get; private set; }
     public bool IsWorldCreated { get; private set; }
 
@@ -241,10 +243,15 @@ public class World : MonoBehaviour
 
         int aux = 1;
         
-        if (above == BlockType.SAND)
+        for (int i = 0; i < blockData.blockDataList.Count; i++)
         {
-            aux = 2;
-            //orldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos+new Vector3Int(0,1,0), blockType);
+            if (blockData.blockDataList[i].blockType == above)
+            {
+                if (blockData.blockDataList[i].isGravitationalBlock)
+                {
+                    aux = 2;
+                }
+            }
         }
         
         WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
@@ -279,10 +286,15 @@ public class World : MonoBehaviour
 
         int aux = 1;
         
-        if (above == BlockType.SAND)
+        for (int i = 0; i < blockData.blockDataList.Count; i++)
         {
-            aux = 2;
-            //orldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos+new Vector3Int(0,1,0), blockType);
+            if (blockData.blockDataList[i].blockType == above)
+            {
+                if (blockData.blockDataList[i].isGravitationalBlock)
+                {
+                    aux = 2;
+                }
+            }
         }
         
         WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);

@@ -195,6 +195,32 @@ public class PlayerController3D : MonoBehaviour
                 }
             }
         }
+        
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+            
+            if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
+            {
+                Vector3 aux = hit.point + (hit.normal * 0.5f);
+
+                //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
+                if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
+                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                {
+                    ModifyTerrain(hit, BlockType.GRAVEL, aux);
+                }
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -279,17 +305,19 @@ public class PlayerController3D : MonoBehaviour
     
     private void ModifyTerrainGravity(RaycastHit hit, BlockType blockType)
     {
+        BlockType blockAbove = world.GetBlock((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+        
         int x = world.SetBlockInt(hit, blockType);
 
         //Es decir habia un bloque con gravedad arriba de el
         if (x == 2)
         {
             GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0)), Quaternion.identity);
-            z.GetComponent<GravityBlock>().blockType = BlockType.SAND;
+            z.GetComponent<GravityBlock>().blockType = blockAbove;
             
             for (int i = 0; i < blockData.blockDataList.Count; i++)
             {
-                if (blockData.blockDataList[i].blockType == BlockType.SAND)
+                if (blockData.blockDataList[i].blockType == blockAbove)
                 {
                     z.GetComponent<MeshRenderer>().material = blockData.blockDataList[i].particleMaterial;
                 }
@@ -301,17 +329,19 @@ public class PlayerController3D : MonoBehaviour
     
     private void ModifyTerrainGravity(Vector3 hit, BlockType blockType, ChunkRenderer y)
     {
+        BlockType blockAbove = world.GetBlock((hit)+new Vector3(0,1,0),y);
+        
         int x = world.SetBlockInt(hit, blockType, y);
 
         //Es decir habia un bloque con gravedad arriba de el
         if (x == 2)
         {
             GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit)+new Vector3(0,1,0)), Quaternion.identity);
-            z.GetComponent<GravityBlock>().blockType = BlockType.SAND;
+            z.GetComponent<GravityBlock>().blockType = blockAbove;
             
             for (int i = 0; i < blockData.blockDataList.Count; i++)
             {
-                if (blockData.blockDataList[i].blockType == BlockType.SAND)
+                if (blockData.blockDataList[i].blockType == blockAbove)
                 {
                     z.GetComponent<MeshRenderer>().material = blockData.blockDataList[i].particleMaterial;
                 }
