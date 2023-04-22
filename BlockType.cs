@@ -14,5 +14,6 @@ public enum BlockType
     TREE_LEAFES_TRANSPARENT,
     TREE_LEAFS_SOLID,
     WATER,
-    SAND
+    SAND,
+    GRAVEL
 }

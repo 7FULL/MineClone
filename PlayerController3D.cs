@@ -65,6 +65,8 @@ public class PlayerController3D : MonoBehaviour
 
     private float auxX;
     private float auxZ;
+
+    public GameObject bloqueGravedad;
     
     void Start()
     {
@@ -128,7 +130,7 @@ public class PlayerController3D : MonoBehaviour
                         if (blockData.blockDataList[i].blockType == blockType)
                         {
                             resistanceBlock = blockData.blockDataList[i].durability;
-                            auxParticleMaterial = blockData.blockDataList[i].particleSprite;
+                            auxParticleMaterial = blockData.blockDataList[i].particleMaterial;
                             resistanceBlockAux = resistanceBlock;
                         }
                     }
@@ -146,7 +148,10 @@ public class PlayerController3D : MonoBehaviour
                     x.GetComponent<ParticleSystemRenderer>().material = auxParticleMaterial;
 
                     Destroy(x,2);
-                    ModifyTerrain(hit, BlockType.AIR);
+
+                    ModifyTerrainGravity(hit, BlockType.AIR);
+                    
+                    //ModifyTerrain(hit, BlockType.AIR);
                     breakingBlock = false;
                     broken = false;
                 }
@@ -186,7 +191,7 @@ public class PlayerController3D : MonoBehaviour
                     Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                     Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                 {
-                    ModifyTerrain(hit, BlockType.DIRT, aux);
+                    ModifyTerrain(hit, BlockType.SAND, aux);
                 }
             }
         }
@@ -272,6 +277,56 @@ public class PlayerController3D : MonoBehaviour
         world.SetBlock(hit, blockType);
     }
     
+    private void ModifyTerrainGravity(RaycastHit hit, BlockType blockType)
+    {
+        int x = world.SetBlockInt(hit, blockType);
+
+        //Es decir habia un bloque con gravedad arriba de el
+        if (x == 2)
+        {
+            GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0)), Quaternion.identity);
+            z.GetComponent<GravityBlock>().blockType = BlockType.SAND;
+            
+            for (int i = 0; i < blockData.blockDataList.Count; i++)
+            {
+                if (blockData.blockDataList[i].blockType == BlockType.SAND)
+                {
+                    z.GetComponent<MeshRenderer>().material = blockData.blockDataList[i].particleMaterial;
+                }
+            }
+            
+            StartCoroutine(llamarDeNuevoTerrainGravity((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),blockType,hit.collider.gameObject.GetComponent<ChunkRenderer>()));
+        }
+    }
+    
+    private void ModifyTerrainGravity(Vector3 hit, BlockType blockType, ChunkRenderer y)
+    {
+        int x = world.SetBlockInt(hit, blockType, y);
+
+        //Es decir habia un bloque con gravedad arriba de el
+        if (x == 2)
+        {
+            GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit)+new Vector3(0,1,0)), Quaternion.identity);
+            z.GetComponent<GravityBlock>().blockType = BlockType.SAND;
+            
+            for (int i = 0; i < blockData.blockDataList.Count; i++)
+            {
+                if (blockData.blockDataList[i].blockType == BlockType.SAND)
+                {
+                    z.GetComponent<MeshRenderer>().material = blockData.blockDataList[i].particleMaterial;
+                }
+            }
+            
+            StartCoroutine(llamarDeNuevoTerrainGravity(hit+new Vector3(0,1,0),blockType,y));
+        }
+    }
+
+    IEnumerator llamarDeNuevoTerrainGravity(Vector3 hit, BlockType blockType, ChunkRenderer y)
+    {
+        yield return new WaitForSecondsRealtime(.25f);
+        ModifyTerrainGravity(hit,blockType,y);
+    }
+
     private void ModifyTerrain(RaycastHit hit, BlockType blockType, Vector3 posicionAColocar)
     {
         world.SetBlock(hit, blockType, posicionAColocar);

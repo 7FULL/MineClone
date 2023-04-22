@@ -191,6 +191,13 @@ public class World : MonoBehaviour
         return WorldDataHelper.GetBlock(chunk.ChunkData.worldReference, pos);
     }
     
+    internal BlockType GetBlock(Vector3 hit, ChunkRenderer x)
+    {
+        Vector3Int pos = GetBlockPos(hit);
+
+        return WorldDataHelper.GetBlock(x.ChunkData.worldReference, pos);
+    }
+    
     internal bool SetBlock(RaycastHit hit, BlockType blockType)
     {
         ChunkRenderer chunk = hit.collider.GetComponent<ChunkRenderer>();
@@ -198,6 +205,9 @@ public class World : MonoBehaviour
             return false;
 
         Vector3Int pos = GetBlockPos(hit);
+        
+        Debug.Log(pos);
+        Debug.Log(pos.y+1);
 
         WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
         chunk.ModifiedByThePlayer = true;
@@ -218,6 +228,82 @@ public class World : MonoBehaviour
         chunk.UpdateChunk();
         return true;
     }
+
+    internal int SetBlockInt(RaycastHit hit, BlockType blockType)
+    {
+        ChunkRenderer chunk = hit.collider.GetComponent<ChunkRenderer>();
+        if (chunk == null)
+            return 0;
+
+        Vector3Int pos = GetBlockPos(hit);
+        
+        BlockType above = GetBlock(pos + new Vector3Int(0,1,0),chunk);
+
+        int aux = 1;
+        
+        if (above == BlockType.SAND)
+        {
+            aux = 2;
+            //orldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos+new Vector3Int(0,1,0), blockType);
+        }
+        
+        WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
+        chunk.ModifiedByThePlayer = true;
+
+        if (Chunk.IsOnEdge(chunk.ChunkData, pos))
+        {
+            List<ChunkData> neighbourDataList = Chunk.GetEdgeNeighbourChunk(chunk.ChunkData, pos);
+            foreach (ChunkData neighbourData in neighbourDataList)
+            {
+                //neighbourData.modifiedByThePlayer = true;
+                ChunkRenderer chunkToUpdate = WorldDataHelper.GetChunk(neighbourData.worldReference, neighbourData.worldPosition);
+                if (chunkToUpdate != null)
+                    chunkToUpdate.UpdateChunk();
+            }
+
+        }
+
+        chunk.UpdateChunk();
+        return aux;
+    }
+    
+    internal int SetBlockInt(Vector3 hit, BlockType blockType, ChunkRenderer x)
+    {
+        ChunkRenderer chunk = x;
+        if (chunk == null)
+            return 0;
+
+        Vector3Int pos = GetBlockPos(hit);
+
+        BlockType above = GetBlock(pos + new Vector3Int(0,1,0),chunk);
+
+        int aux = 1;
+        
+        if (above == BlockType.SAND)
+        {
+            aux = 2;
+            //orldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos+new Vector3Int(0,1,0), blockType);
+        }
+        
+        WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
+        chunk.ModifiedByThePlayer = true;
+
+        if (Chunk.IsOnEdge(chunk.ChunkData, pos))
+        {
+            List<ChunkData> neighbourDataList = Chunk.GetEdgeNeighbourChunk(chunk.ChunkData, pos);
+            foreach (ChunkData neighbourData in neighbourDataList)
+            {
+                //neighbourData.modifiedByThePlayer = true;
+                ChunkRenderer chunkToUpdate = WorldDataHelper.GetChunk(neighbourData.worldReference, neighbourData.worldPosition);
+                if (chunkToUpdate != null)
+                    chunkToUpdate.UpdateChunk();
+            }
+
+        }
+
+        chunk.UpdateChunk();
+        return aux;
+    }
     
     internal bool SetBlock(RaycastHit hit, BlockType blockType, Vector3 posAColocar)
     {
@@ -227,6 +313,35 @@ public class World : MonoBehaviour
 
         Vector3Int pos = GetBlockPos(posAColocar);
         Vector3Int posHit = GetBlockPos(hit);
+
+        WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
+        chunk.ModifiedByThePlayer = true;
+
+        if (Chunk.IsOnEdge(chunk.ChunkData, posHit))
+        {
+            
+            List<ChunkData> neighbourDataList = Chunk.GetEdgeNeighbourChunk(chunk.ChunkData, posHit);
+            foreach (ChunkData neighbourData in neighbourDataList)
+            {
+                //neighbourData.modifiedByThePlayer = true;
+                ChunkRenderer chunkToUpdate = WorldDataHelper.GetChunk(neighbourData.worldReference, neighbourData.worldPosition);
+                if (chunkToUpdate != null)
+                    chunkToUpdate.UpdateChunk();
+            }
+        }
+
+        chunk.UpdateChunk();
+        return true;
+    }
+    
+    internal bool SetBlock(ChunkRenderer x,BlockType blockType, Vector3 posAColocar)
+    {
+        ChunkRenderer chunk = x;
+        if (chunk == null)
+            return false;
+
+        Vector3Int pos = GetBlockPos(posAColocar);
+        Vector3Int posHit = GetBlockPos(posAColocar);
 
         WorldDataHelper.SetBlock(chunk.ChunkData.worldReference, pos, blockType);
         chunk.ModifiedByThePlayer = true;
@@ -259,7 +374,7 @@ public class World : MonoBehaviour
         return Vector3Int.RoundToInt(pos);
     }
     
-    private Vector3Int GetBlockPos(Vector3 pos)
+    public Vector3Int GetBlockPos(Vector3 pos)
     {
         return Vector3Int.RoundToInt(pos);
     }

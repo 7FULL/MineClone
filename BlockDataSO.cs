@@ -20,6 +20,8 @@ public class Block
 
     public int durability = 1;
 
-    public Material particleSprite;
+    public Material particleMaterial;
+
+    public bool isGravitationalBlock = false;
 }
 

@@ -7,6 +7,8 @@ public class AdditionalLayerHandler : BlockLayerHandler
     [Range(0, 1)]
     public float probability = 0.5f;
 
+    public int heightToStartAppearing = 0;
+
     public BlockType blockType;
     
     [SerializeField]
@@ -33,7 +35,10 @@ public class AdditionalLayerHandler : BlockLayerHandler
             for (int i = chunkData.worldPosition.y; i <= endPosition; i++)
             {
                 Vector3Int pos = new Vector3Int(x, i, z);
-                Chunk.SetBlock(chunkData, pos, blockType);
+                if (i > heightToStartAppearing)
+                {
+                    Chunk.SetBlock(chunkData, pos, blockType);
+                }
             }
             return true;
         }
