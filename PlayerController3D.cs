@@ -67,6 +67,10 @@ public class PlayerController3D : MonoBehaviour
     private float auxZ;
 
     public GameObject bloqueGravedad;
+
+    public GameObject inventory;
+
+    private bool ableToMove = true;
     
     void Start()
     {
@@ -85,139 +89,163 @@ public class PlayerController3D : MonoBehaviour
 
     void Update()
     {
-        sprint = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-        
-        if (rb.velocity.magnitude < maxSpeed)
+        if (Input.GetKeyDown(KeyCode.Tab))
         {
-            if (grounded.isGrounded && Input.GetKey(KeyCode.Space))
+            if(inventory.activeInHierarchy)
             {
-                rb.AddForce(jumpSpeed * Vector3.up,ForceMode.Impulse);
-                grounded.isGrounded = false;
-            }
-        }
-        
-        Vector3 forward = transform.TransformDirection(Vector3.forward);
-        Vector3 right = transform.TransformDirection(Vector3.right);
-        
-        bool isRunning = Input.GetKey(KeyCode.LeftShift);
-        float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
-        float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
-        
-        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
-
-        rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-        rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
-        
-        if (Input.GetMouseButton(0))
-        {
-            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-            
-            if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
-            {
-                romperSprite.gameObject.SetActive(true);
-
-                BlockType blockType = world.GetBlock(hit);
-                
-                lookingBlockPos = world.GetBlockPos(hit);
-
-                if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && blockType != BlockType.WATER && lookingBlockPos != lastBlockPos)
-                {
-                    
-                    for (int i = 0; i < blockData.blockDataList.Count; i++)
-                    {
-                        if (blockData.blockDataList[i].blockType == blockType)
-                        {
-                            resistanceBlock = blockData.blockDataList[i].durability;
-                            auxParticleMaterial = blockData.blockDataList[i].particleMaterial;
-                            resistanceBlockAux = resistanceBlock;
-                        }
-                    }
-                    
-                    breakingBlock = true;
-                    
-                    romperSprite.transform.position = lookingBlockPos;
-                    lastBlockPos = lookingBlockPos;
-                }
-
-                if (broken)
-                {
-                    GameObject x = Instantiate(romperParticulas, lookingBlockPos, Quaternion.identity);
-
-                    x.GetComponent<ParticleSystemRenderer>().material = auxParticleMaterial;
-
-                    Destroy(x,2);
-
-                    ModifyTerrainGravity(hit, BlockType.AIR);
-                    
-                    //ModifyTerrain(hit, BlockType.AIR);
-                    breakingBlock = false;
-                    broken = false;
-                }
+                inventory.SetActive(false);
+                ableToMove = true;
+                Cursor.lockState = CursorLockMode.Confined;
+                ableToMove = true;
+                Cursor.visible = false;
             }
             else
             {
-                romperSprite.SetActive(false);
+                rb.velocity = new Vector3(0, 0, 0);
+                inventory.SetActive(true);
+                ableToMove = true;
+                Cursor.lockState = CursorLockMode.None;
+                ableToMove = false;
+                Cursor.visible = true;
             }
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (ableToMove)
         {
-            romperSprite.gameObject.SetActive(false);
-            breakingBlock = false;
-            broken = false;
-            lastBlockPos = new Vector3Int(0, 20000, 0);
-        }
+            sprint = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
         
-        if (Input.GetMouseButtonDown(1))
-        {
-            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-            
-            if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
+            if (rb.velocity.magnitude < maxSpeed)
             {
-                Vector3 aux = hit.point + (hit.normal * 0.5f);
-
-                //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
-                if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                if (grounded.isGrounded && Input.GetKey(KeyCode.Space))
                 {
-                    ModifyTerrain(hit, BlockType.SAND, aux);
+                    rb.AddForce(jumpSpeed * Vector3.up,ForceMode.Impulse);
+                    grounded.isGrounded = false;
                 }
             }
-        }
         
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-            
-            if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
-            {
-                Vector3 aux = hit.point + (hit.normal * 0.5f);
+            Vector3 forward = transform.TransformDirection(Vector3.forward);
+            Vector3 right = transform.TransformDirection(Vector3.right);
+        
+            bool isRunning = Input.GetKey(KeyCode.LeftShift);
+            float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
+            float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
+        
+            moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-                //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
-                if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
-                    Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
+            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+        
+            if (Input.GetMouseButton(0))
+            {
+                Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+            
+                if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
                 {
-                    ModifyTerrain(hit, BlockType.GRAVEL, aux);
+                    romperSprite.gameObject.SetActive(true);
+
+                    BlockType blockType = world.GetBlock(hit);
+                
+                    lookingBlockPos = world.GetBlockPos(hit);
+
+                    if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && blockType != BlockType.WATER && lookingBlockPos != lastBlockPos)
+                    {
+                    
+                        for (int i = 0; i < blockData.blockDataList.Count; i++)
+                        {
+                            if (blockData.blockDataList[i].blockType == blockType)
+                            {
+                                resistanceBlock = blockData.blockDataList[i].durability;
+                                auxParticleMaterial = blockData.blockDataList[i].particleMaterial;
+                                resistanceBlockAux = resistanceBlock;
+                            }
+                        }
+                    
+                        breakingBlock = true;
+                    
+                        romperSprite.transform.position = lookingBlockPos;
+                        lastBlockPos = lookingBlockPos;
+                    }
+
+                    if (broken)
+                    {
+                        GameObject x = Instantiate(romperParticulas, lookingBlockPos, Quaternion.identity);
+
+                        x.GetComponent<ParticleSystemRenderer>().material = auxParticleMaterial;
+
+                        Destroy(x,2);
+
+                        ModifyTerrain(hit, BlockType.AIR);
+                    
+                        //ModifyTerrain(hit, BlockType.AIR);
+                        breakingBlock = false;
+                        broken = false;
+                    }
+                }
+                else
+                {
+                    romperSprite.SetActive(false);
+                }
+            }
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                romperSprite.gameObject.SetActive(false);
+                breakingBlock = false;
+                broken = false;
+                lastBlockPos = new Vector3Int(0, 20000, 0);
+            }
+        
+            if (Input.GetMouseButtonDown(1))
+            {
+                Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+            
+                if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
+                {
+                    Vector3 aux = hit.point + (hit.normal * 0.5f);
+
+                    //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
+                    if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                    {
+                        ModifyTerrain(hit, BlockType.SAND, aux);
+                    }
+                }
+            }
+        
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+            
+                if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
+                {
+                    Vector3 aux = hit.point + (hit.normal * 0.5f);
+
+                    //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
+                    if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
+                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                    {
+                        ModifyTerrain(hit, BlockType.GRAVEL, aux);
+                    }
                 }
             }
         }
@@ -225,85 +253,83 @@ public class PlayerController3D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (rb.velocity.magnitude < maxSpeed)
+        if (ableToMove)
         {
-            rb.velocity = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z);
+            if (rb.velocity.magnitude < maxSpeed)
+            {
+                rb.velocity = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z);
 
-            rb.AddForce(gravity * Vector3.down);
-        }
-
-        if (!sprint)
-        {
-            if (playerCamera.fieldOfView > 60)
-            {
-                playerCamera.fieldOfView--;
-            }
-        }
-        else
-        {
-            if (playerCamera.fieldOfView < 65 && rb.velocity.magnitude > 3)
-            {
-                playerCamera.fieldOfView++;
-            }
-        }
-
-        if (rb.velocity.x < 3 && rb.velocity.z < 3)
-        {
-            if (playerCamera.fieldOfView > 60)
-            {
-                playerCamera.fieldOfView--;
-            }
-        }
-        
-        if (breakingBlock)
-        {
-            if (resistanceBlock > 0)
-            {
-                resistanceBlock--;
+                rb.AddForce(gravity * Vector3.down);
             }
 
-            float x = resistanceBlockAux / romperFotos.Length;
-            
-
-            float[] y = new float[romperFotos.Length];
-
-            for (int i = 1; i < y.Length; i++)
+            if (!sprint)
             {
-                y[i] = resistanceBlockAux - x*i;
-            }
-            
-            int indexFoto = 0;
-            
-            for (int i = 0; i < y.Length; i++)
-            {
-                if (resistanceBlock < y[i])
+                if (playerCamera.fieldOfView > 60)
                 {
-                    indexFoto = i;
+                    playerCamera.fieldOfView--;
+                }
+            }
+            else
+            {
+                if (playerCamera.fieldOfView < 65 && rb.velocity.magnitude > 3)
+                {
+                    playerCamera.fieldOfView++;
                 }
             }
 
-            for (int i = 0; i < fotosSprites.Length; i++)
+            if (rb.velocity.x < 3 && rb.velocity.z < 3)
             {
-                fotosSprites[i].sprite = romperFotos[indexFoto];
+                if (playerCamera.fieldOfView > 60)
+                {
+                    playerCamera.fieldOfView--;
+                }
             }
-            
-            if (resistanceBlock == 0)
+        
+            if (breakingBlock)
             {
-                broken = true;
+                if (resistanceBlock > 0)
+                {
+                    resistanceBlock--;
+                }
+
+                float x = resistanceBlockAux / romperFotos.Length;
+            
+
+                float[] y = new float[romperFotos.Length];
+
+                for (int i = 1; i < y.Length; i++)
+                {
+                    y[i] = resistanceBlockAux - x*i;
+                }
+            
+                int indexFoto = 0;
+            
+                for (int i = 0; i < y.Length; i++)
+                {
+                    if (resistanceBlock < y[i])
+                    {
+                        indexFoto = i;
+                    }
+                }
+
                 for (int i = 0; i < fotosSprites.Length; i++)
                 {
-                    fotosSprites[i].sprite = romperFotos[0];
+                    fotosSprites[i].sprite = romperFotos[indexFoto];
+                }
+            
+                if (resistanceBlock == 0)
+                {
+                    broken = true;
+                    for (int i = 0; i < fotosSprites.Length; i++)
+                    {
+                        fotosSprites[i].sprite = romperFotos[0];
+                    }
                 }
             }
         }
     }
 
     private void ModifyTerrain(RaycastHit hit, BlockType blockType)
-    {
-        world.SetBlock(hit, blockType);
-    }
-    
-    private void ModifyTerrainGravity(RaycastHit hit, BlockType blockType)
     {
         BlockType blockAbove = world.GetBlock((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
         
@@ -353,7 +379,7 @@ public class PlayerController3D : MonoBehaviour
 
     IEnumerator llamarDeNuevoTerrainGravity(Vector3 hit, BlockType blockType, ChunkRenderer y)
     {
-        yield return new WaitForSecondsRealtime(.25f);
+        yield return new WaitForSecondsRealtime(.2f);
         ModifyTerrainGravity(hit,blockType,y);
     }
 
