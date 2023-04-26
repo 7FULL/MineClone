@@ -60,7 +60,7 @@ public class TreeLayerHandler : BlockLayerHandler
                 for (int i = 1; i < 5; i++)
                 {
                     chunkCoordinates.y = surfaceHeightNoise + i;
-                    Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.TREE_TRUNK);
+                    Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.MADERA_ROBLE);
                 }
                 foreach (Vector3Int leafPosition in treeLeafesStaticLayout)
                 {

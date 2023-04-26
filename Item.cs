@@ -10,4 +10,6 @@ public class Item : ScriptableObject
     public Sprite sprite;
 
     public int maxStack;
+
+    public BlockType BlockType;
 }

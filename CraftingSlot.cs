@@ -12,16 +12,43 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
     private DragDropItem item;
 
     private GameObject gameObjectItem;
-    
+
+    public bool isOutput = false;
+
     private void Awake()
     {
         cf = GetComponentInParent<CraftingManager>();
     }
+
+    public void asign(DragDropItem dragDropItem)
+    {
+        //Debug.Log("1");
+
+        if (!isOutput)
+        {
+            dragDropItem.GetComponent<RectTransform>().anchoredPosition =
+                GetComponent<RectTransform>().anchoredPosition;
+
+            this.item = dragDropItem;
+
+            gameObjectItem = dragDropItem.gameObject;
+
+            dragDropItem.lastWasCraftingSlot = true;
+
+            dragDropItem.lastCraftingSlot = this;
+
+            update();
+            
+            cf.UpdateOutputSlot();
+        }
+    }
     
     public void OnDrop(PointerEventData eventData)
     {
-        if (eventData.pointerDrag != null)
+        if (eventData.pointerDrag != null && !isOutput)
         {
+            //Debug.Log("1");
+            
             eventData.pointerDrag.GetComponent<RectTransform>().anchoredPosition =
                 GetComponent<RectTransform>().anchoredPosition;
 
@@ -31,13 +58,24 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
 
             gameObjectItem = eventData.pointerDrag;
 
-            update(eventData);
+            update();
             
             cf.UpdateOutputSlot();
         }
     }
 
-    public void update(PointerEventData eventData)
+    public void implementDrag(DragDropItem dragItem)
+    {
+        this.item = dragItem;
+
+        gameObjectItem = dragItem.gameObject;
+
+        update();
+            
+        cf.UpdateOutputSlot();
+    }
+
+    public void update()
     {
         if (item != null)
         {
@@ -87,5 +125,14 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
                 cf.item_11Much = 0;
             }
         }
+        
+        cf.UpdateDictionary();
+    }
+
+    public void clear()
+    {
+        gameObjectItem = null;
+
+        item = null;
     }
 }

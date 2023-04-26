@@ -15,7 +15,7 @@ using UnityEngine.UI;
 public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IDropHandler
 {
     public Canvas canvas;
-    private RectTransform rectTransform;
+    public RectTransform rectTransform;
     private CanvasGroup canvasGroup;
 
     private Vector2 startedPosition;
@@ -31,7 +31,19 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
     public Image imagen;
 
-    private bool lastWasCraftingSlot = false;
+    public bool lastWasCraftingSlot = false;
+    
+    public bool lastWasInventorySlot = false;
+
+    public CraftingSlot lastCraftingSlot;
+    
+    public InventorySlots lastInventorySlot;
+    
+    public GameObject dropableItem;
+    
+    public GameObject dragDropItem;
+
+    private PointerEventData PointerEventData = null;
 
     private void Awake()
     {
@@ -41,10 +53,19 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         imagen.sprite = item.sprite;
 
         cf = FindObjectOfType<CraftingManager>();
+
+        canvas = cf.canvas;
+    }
+
+    public void inicializarFoto()
+    {
+        imagen.sprite = item.sprite;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        PointerEventData = eventData;
+        
         transform.SetAsLastSibling();
         
         //canvasGroup.alpha = 0.6f;
@@ -55,76 +76,192 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         {
             cf.outputDone();
             isOutput = false;
+            cf.update();
+            cf.UpdateOutputSlot();
         }
 
         if (lastWasCraftingSlot)
         {
+            lastCraftingSlot.clear();
+            
             cf.updateItems(eventData.pointerDrag);
+        }
+        
+        if (lastWasInventorySlot)
+        {
+            lastInventorySlot.clear();
         }
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+
+        PointerEventData = null;
         //canvasGroup.alpha = 1;
 
-        if (eventData.pointerEnter.transform.parent != null)
+        hacerCosasDeObjeto(eventData,this);
+        
+        canvasGroup.blocksRaycasts = true;
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(1) && PointerEventData != null)
         {
-            Slot slot = eventData.pointerEnter.transform.parent.GetComponent<Slot>();
+            if (PointerEventData.pointerEnter.name == "Panel")
+            {
+                dropearSoloUno();
+            }
+            else if (PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>() != null)
+            {
+                GameObject aux = Instantiate(dragDropItem, this.transform.parent.transform);
+
+                DragDropItem dragDrop= aux.GetComponent<DragDropItem>();
+
+                dragDrop.rectTransform.anchoredPosition = PointerEventData.pointerEnter.transform.parent.GetComponent<RectTransform>().anchoredPosition;
+
+                PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>().implementDrag(dragDrop);
+                
+                dragDrop.item = item;
+                dragDrop.actualizarCantidad(1);
+                dragDrop.inicializarFoto();
+                
+                restarCantidad(1);
+                
+                bool x = hacerCosasDeObjeto(PointerEventData,dragDrop);
+
+                dragDrop.canvasGroup.blocksRaycasts = true;
+                
+                transform.SetAsLastSibling();
+
+                if (x)
+                {
+                    Debug.Log("Destruido");
+                    Destroy(aux);
+                }
+            }
+            else
+            {
+                GameObject aux = Instantiate(dragDropItem, this.transform.parent.transform);
+
+                DragDropItem dragDrop= aux.GetComponent<DragDropItem>();
+
+                dragDrop.item = item;
+                dragDrop.actualizarCantidad(1);
+                dragDrop.inicializarFoto();
+                
+                restarCantidad(1);
+                
+                bool x = hacerCosasDeObjeto(PointerEventData,dragDrop);
+
+                dragDrop.canvasGroup.blocksRaycasts = true;
+                
+                transform.SetAsLastSibling();
+
+                Destroy(aux);
+                
+                cf.update();
+            }
+        }
+    }
+
+    public bool hacerCosasDeObjeto(PointerEventData eventData,DragDropItem dropItem)
+    {
+        bool aux = false;
+        
+        Slot slot = eventData.pointerEnter.transform.parent.GetComponent<Slot>();
             if (slot == null)
             {
                 DragDropItem otherItem = eventData.pointerEnter.transform.parent.GetComponent<DragDropItem>();
 
-                if (otherItem == null)
+                if ((otherItem == null || otherItem.isOutput || isOutput) && eventData.pointerEnter.name != "Panel")
                 {
                     //Debug.Log("0");
-                    rectTransform.anchoredPosition = startedPosition;
+                    aux = true;
+                    dropItem.rectTransform.anchoredPosition = dropItem.startedPosition;
                 }else{
-                    if (otherItem.item == item)
+                    if (eventData.pointerEnter.name != "Panel")
                     {
+                        if (otherItem.item == dropItem.item)
+                        {
                         //Debug.Log("1");
-                        if (otherItem.itemMuch+itemMuch <= item.maxStack)
+                        if (otherItem.itemMuch+dropItem.itemMuch <= dropItem.item.maxStack)
                         {
                             //Debug.Log("2");
-                            otherItem.sumarCantidad(itemMuch);
-                            borrarItem();
+                            otherItem.sumarCantidad(dropItem.itemMuch);
+                            dropItem.borrarItem();
                         }
                         else
                         {
                             //Debug.Log("3");
                         
-                            int x = item.maxStack - (otherItem.itemMuch+itemMuch);
+                            int x = dropItem.item.maxStack - (otherItem.itemMuch+dropItem.itemMuch);
 
-                            if (otherItem.itemMuch < itemMuch)
+                            if (otherItem.itemMuch < dropItem.itemMuch)
                             {
                                 otherItem.itemMuch = otherItem.item.maxStack;
                         
-                                actualizarCantidad(-x);
-                                otherItem.actualizarCantidad(item.maxStack);
+                                dropItem.actualizarCantidad(-x);
+                                otherItem.actualizarCantidad(dropItem.item.maxStack);
                             }
                             else
                             {
-                                itemMuch = item.maxStack;
+                                dropItem.itemMuch = dropItem.item.maxStack;
                         
                                 otherItem.actualizarCantidad(-x);
-                                actualizarCantidad(item.maxStack);
+                                dropItem.actualizarCantidad(dropItem.item.maxStack);
                             }
-                        
-                            rectTransform.anchoredPosition = startedPosition;
+
+                            aux = true;
+                            dropItem.rectTransform.anchoredPosition = dropItem.startedPosition;
                         }
                         
                         //Updateamos aqui los slots tambien porque si juntamos 2 bloques dentro del craft no los detecta
-                        cf.update(eventData);
+                        dropItem.cf.update();
                     }
                     else
                     {
+                        Debug.Log("0");
+                        
                         otherItem.resetStartPosition();
                     
                         RectTransform otherItemTransform = otherItem.gameObject.GetComponent<RectTransform>();
-                        otherItemTransform.anchoredPosition = startedPosition;
+                        otherItemTransform.anchoredPosition = dropItem.startedPosition;
 
-                        rectTransform.anchoredPosition = otherItem.startedPosition;
+                        otherItem.lastCraftingSlot = dropItem.lastCraftingSlot;
+                        otherItem.lastInventorySlot = dropItem.lastInventorySlot;
+                        
+                        otherItem.lastWasCraftingSlot = dropItem.lastWasCraftingSlot;
+                        otherItem.lastWasInventorySlot = dropItem.lastWasInventorySlot;
 
-                        resetStartPosition();
+                        dropItem.rectTransform.anchoredPosition = otherItem.startedPosition;
+
+                        dropItem.resetStartPosition();
+                        
+                        if (dropItem.lastWasCraftingSlot)
+                        {
+                            dropItem.lastCraftingSlot.asign(this);
+                        }
+                        
+                        if (otherItem.lastWasInventorySlot)
+                        {
+                            otherItem.lastInventorySlot.asign(this);
+                        }
+                        
+                        if (dropItem.lastWasInventorySlot)
+                        {
+                            dropItem.lastInventorySlot.asign(this);
+                        }
+                        
+                        if (otherItem.lastWasCraftingSlot)
+                        {
+                            otherItem.lastCraftingSlot.asign(this);
+                        }
+                        
+                        dropItem.cf.update();
+                        
+                        aux = true;
+                    }
                     }
                 }
             }
@@ -134,18 +271,92 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 
                 if (t.Equals(typeof(CraftingSlot)))
                 {
-                    lastWasCraftingSlot = true;
+                    if (!eventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>().isOutput)
+                    {
+                        dropItem.lastWasCraftingSlot = true;
+                    
+                        dropItem.lastCraftingSlot = eventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>();
+                    }
+                    else
+                    {
+                        dropItem.rectTransform.anchoredPosition = startedPosition;
+
+                        if (dropItem.lastWasCraftingSlot)
+                        {
+                            dropItem.lastCraftingSlot.asign(this);
+                        }
+                    }
+                }
+
+                if (t.Equals(typeof(InventorySlots)))
+                {
+                    dropItem.lastWasInventorySlot = true;
+                    
+                    dropItem.lastInventorySlot = eventData.pointerEnter.transform.parent.GetComponent<InventorySlots>();
+
+                    eventData.pointerEnter.transform.parent.GetComponent<InventorySlots>().item = this;
                 }
             }
+            if(eventData.pointerEnter.name == "Panel")
+            {
+                dropItem.dropearItem();
+            }
+
+            return aux;
+    }
+
+    private void dropearItem()
+    {
+        GameObject drop = null;
+                        
+        drop = Instantiate(dropableItem,GameManager.instance.player.transform.position+(GameManager.instance.player.transform.forward*0.5f), Quaternion.identity);
+
+        drop.GetComponent<DropableItem>().Item = item;
+        
+        drop.GetComponent<DropableItem>().itemMuch = itemMuch;
+        
+        drop.GetComponent<Rigidbody>().AddForce(GameManager.instance.player.transform.forward*200);
+
+        Block block = GameManager.instance.getBlockData(item.BlockType);
+                            
+        if (block != null && block.particleMaterial != null)
+        {
+            drop.GetComponent<MeshRenderer>().material = block.particleMaterial;
         }
         else
         {
-            rectTransform.anchoredPosition = startedPosition;
+            drop.GetComponent<MeshRenderer>().material = GameManager.instance.defaultMaterial;
         }
         
-        canvasGroup.blocksRaycasts = true;
+        Destroy(this.gameObject);
     }
+    
+    private void dropearSoloUno()
+    {
+        GameObject drop = null;
+                        
+        drop = Instantiate(dropableItem,GameManager.instance.player.transform.position+(GameManager.instance.player.transform.forward*0.5f), Quaternion.identity);
 
+        drop.GetComponent<DropableItem>().Item = item;
+        
+        drop.GetComponent<Rigidbody>().AddForce(GameManager.instance.player.transform.forward*200);
+
+        Block block = GameManager.instance.getBlockData(item.BlockType);
+
+        if (block.particleMaterial != null)
+        {
+            drop.GetComponent<MeshRenderer>().material = block.particleMaterial;
+        }
+        else
+        {
+            drop.GetComponent<MeshRenderer>().material = GameManager.instance.defaultMaterial;
+        }
+        
+        
+        
+        restarCantidad(1);
+    }
+    
     public void resetStartPosition()
     {
         startedPosition = rectTransform.anchoredPosition;
@@ -153,7 +364,19 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
     public void OnDrag(PointerEventData eventData)
     {
+        PointerEventData = eventData;
+        
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor / 1.5f / 1.5f;
+
+        if (transform.GetSiblingIndex() != transform.parent.childCount - 1)
+        {
+            transform.SetAsLastSibling();
+        }
+
+        /*if (Input.GetMouseButtonDown(1) && eventData.pointerEnter.name == "Panel")
+        {
+            dropearSoloUno();
+        }*/
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -180,6 +403,11 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
     {
         itemMuch = x;
         texto.text = itemMuch.ToString();
+
+        if (x == 0)
+        {
+            Destroy(this.gameObject);
+        }
     }
 
     public void sumarCantidad(int x)
@@ -192,6 +420,11 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
     {
         itemMuch -= x;
         texto.text = itemMuch.ToString();
+
+        if (itemMuch == 0)
+        {
+            Destroy(this.gameObject);
+        }
     }
 
     public void borrarItem()

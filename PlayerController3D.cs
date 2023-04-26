@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Random = UnityEngine.Random;
 
 public class PlayerController3D : MonoBehaviour
 {
@@ -47,8 +48,6 @@ public class PlayerController3D : MonoBehaviour
 
     private bool broken = false;
 
-    public BlockDataSO blockData;
-
     public SpriteRenderer[] fotosSprites;
 
     private Material auxParticleMaterial;
@@ -68,10 +67,13 @@ public class PlayerController3D : MonoBehaviour
 
     public GameObject bloqueGravedad;
 
-    public GameObject inventory;
+    public GameObject inventoryGameObject;
 
     private bool ableToMove = true;
-    
+
+    public GameObject dropableItem;
+
+    public Inventory inventory;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -91,9 +93,9 @@ public class PlayerController3D : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            if(inventory.activeInHierarchy)
+            if(inventoryGameObject.activeInHierarchy)
             {
-                inventory.SetActive(false);
+                inventoryGameObject.SetActive(false);
                 ableToMove = true;
                 Cursor.lockState = CursorLockMode.Confined;
                 ableToMove = true;
@@ -102,7 +104,7 @@ public class PlayerController3D : MonoBehaviour
             else
             {
                 rb.velocity = new Vector3(0, 0, 0);
-                inventory.SetActive(true);
+                inventoryGameObject.SetActive(true);
                 ableToMove = true;
                 Cursor.lockState = CursorLockMode.None;
                 ableToMove = false;
@@ -151,17 +153,13 @@ public class PlayerController3D : MonoBehaviour
 
                     if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && blockType != BlockType.WATER && lookingBlockPos != lastBlockPos)
                     {
-                    
-                        for (int i = 0; i < blockData.blockDataList.Count; i++)
-                        {
-                            if (blockData.blockDataList[i].blockType == blockType)
-                            {
-                                resistanceBlock = blockData.blockDataList[i].durability;
-                                auxParticleMaterial = blockData.blockDataList[i].particleMaterial;
-                                resistanceBlockAux = resistanceBlock;
-                            }
-                        }
-                    
+
+                        Block block = GameManager.instance.getBlockData(blockType);
+                        
+                        resistanceBlock = block.durability;
+                        auxParticleMaterial = block.particleMaterial;
+                        resistanceBlockAux = resistanceBlock;
+
                         breakingBlock = true;
                     
                         romperSprite.transform.position = lookingBlockPos;
@@ -176,8 +174,40 @@ public class PlayerController3D : MonoBehaviour
 
                         Destroy(x,2);
 
+                        BlockType blockTypeToCompare = world.GetBlock((hit.point - hit.normal * 0.01f),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+
+                        GameObject drop = null;
+                        
+                        if (blockTypeToCompare != BlockType.AIR && blockTypeToCompare != BlockType.WATER && blockTypeToCompare != BlockType.NOTHING
+                            && blockTypeToCompare != BlockType.TREE_LEAFS_SOLID && blockTypeToCompare != BlockType.TREE_LEAFES_TRANSPARENT)
+                        {
+                            drop = Instantiate(dropableItem,world.GetBlockPos((hit.point - hit.normal * 0.01f)), Quaternion.identity);
+
+                            if (blockTypeToCompare == BlockType.GRASS_DIRT)
+                            {
+                                blockTypeToCompare = BlockType.DIRT;
+                            }
+
+                            Item item = GameManager.instance.getItem(blockTypeToCompare);
+
+                            drop.GetComponent<DropableItem>().Item = item;
+                            drop.GetComponent<DropableItem>().itemMuch = 1;
+
+                            Block block = GameManager.instance.getBlockData(blockTypeToCompare);
+                            
+                            drop.GetComponent<MeshRenderer>().material = block.particleMaterial;
+                        }
+                        
                         ModifyTerrain(hit, BlockType.AIR);
-                    
+
+                        if (drop != null)
+                        {
+                            Vector3 direccionAleatoria = Random.onUnitSphere * 100;
+                            direccionAleatoria.y = Mathf.Abs(direccionAleatoria.y * 2f);
+
+                            drop.GetComponent<Rigidbody>().AddForce(direccionAleatoria);
+                        }
+
                         //ModifyTerrain(hit, BlockType.AIR);
                         breakingBlock = false;
                         broken = false;
@@ -218,7 +248,7 @@ public class PlayerController3D : MonoBehaviour
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                     {
-                        ModifyTerrain(hit, BlockType.SAND, aux);
+                        ModifyTerrain(hit, BlockType.TABLONES_ABETO, aux);
                     }
                 }
             }
@@ -244,7 +274,7 @@ public class PlayerController3D : MonoBehaviour
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                     {
-                        ModifyTerrain(hit, BlockType.GRAVEL, aux);
+                        ModifyTerrain(hit, BlockType.TABLONES_ROBLE, aux);
                     }
                 }
             }
@@ -341,13 +371,7 @@ public class PlayerController3D : MonoBehaviour
             GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0)), Quaternion.identity);
             z.GetComponent<GravityBlock>().blockType = blockAbove;
             
-            for (int i = 0; i < blockData.blockDataList.Count; i++)
-            {
-                if (blockData.blockDataList[i].blockType == blockAbove)
-                {
-                    z.GetComponent<MeshRenderer>().material = blockData.blockDataList[i].particleMaterial;
-                }
-            }
+            z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockAbove).particleMaterial;
             
             StartCoroutine(llamarDeNuevoTerrainGravity((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),blockType,hit.collider.gameObject.GetComponent<ChunkRenderer>()));
         }
@@ -365,13 +389,7 @@ public class PlayerController3D : MonoBehaviour
             GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit)+new Vector3(0,1,0)), Quaternion.identity);
             z.GetComponent<GravityBlock>().blockType = blockAbove;
             
-            for (int i = 0; i < blockData.blockDataList.Count; i++)
-            {
-                if (blockData.blockDataList[i].blockType == blockAbove)
-                {
-                    z.GetComponent<MeshRenderer>().material = blockData.blockDataList[i].particleMaterial;
-                }
-            }
+            z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockAbove).particleMaterial;
             
             StartCoroutine(llamarDeNuevoTerrainGravity(hit+new Vector3(0,1,0),blockType,y));
         }
@@ -387,4 +405,5 @@ public class PlayerController3D : MonoBehaviour
     {
         world.SetBlock(hit, blockType, posicionAColocar);
     }
+    
 }
