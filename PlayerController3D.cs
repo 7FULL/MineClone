@@ -183,6 +183,9 @@ public class PlayerController3D : MonoBehaviour
                         {
                             drop = Instantiate(dropableItem,world.GetBlockPos((hit.point - hit.normal * 0.01f)), Quaternion.identity);
 
+                            drop.GetComponent<DropableItem>().chunkRenderer =
+                                hit.collider.gameObject.GetComponent<ChunkRenderer>();
+
                             if (blockTypeToCompare == BlockType.GRASS_DIRT)
                             {
                                 blockTypeToCompare = BlockType.DIRT;
@@ -248,7 +251,7 @@ public class PlayerController3D : MonoBehaviour
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                     {
-                        ModifyTerrain(hit, BlockType.TABLONES_ABETO, aux);
+                        ModifyTerrain(hit, BlockType.SAND, aux);
                     }
                 }
             }
@@ -274,7 +277,7 @@ public class PlayerController3D : MonoBehaviour
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                     {
-                        ModifyTerrain(hit, BlockType.TABLONES_ROBLE, aux);
+                        ModifyTerrain(hit, BlockType.GRAVEL, aux);
                     }
                 }
             }
@@ -371,6 +374,8 @@ public class PlayerController3D : MonoBehaviour
             GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0)), Quaternion.identity);
             z.GetComponent<GravityBlock>().blockType = blockAbove;
             
+            z.GetComponent<GravityBlock>().chunkRenderer = hit.collider.gameObject.GetComponent<ChunkRenderer>();
+            
             z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockAbove).particleMaterial;
             
             StartCoroutine(llamarDeNuevoTerrainGravity((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),blockType,hit.collider.gameObject.GetComponent<ChunkRenderer>()));
@@ -389,6 +394,8 @@ public class PlayerController3D : MonoBehaviour
             GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit)+new Vector3(0,1,0)), Quaternion.identity);
             z.GetComponent<GravityBlock>().blockType = blockAbove;
             
+            z.GetComponent<GravityBlock>().chunkRenderer = y;
+            
             z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockAbove).particleMaterial;
             
             StartCoroutine(llamarDeNuevoTerrainGravity(hit+new Vector3(0,1,0),blockType,y));
@@ -400,10 +407,25 @@ public class PlayerController3D : MonoBehaviour
         yield return new WaitForSecondsRealtime(.2f);
         ModifyTerrainGravity(hit,blockType,y);
     }
-
+    
     private void ModifyTerrain(RaycastHit hit, BlockType blockType, Vector3 posicionAColocar)
     {
-        world.SetBlock(hit, blockType, posicionAColocar);
+        BlockType blocKbelow = world.GetBlock((hit.point+hit.normal*0.5f)+new Vector3(0,-1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+        
+        if (GameManager.instance.getBlockData(blocKbelow).isSolid)
+        {
+            world.SetBlockInt(hit, blockType, posicionAColocar);
+        }
+        else
+        {
+            GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point+hit.normal*0.5f)), Quaternion.identity);
+            
+            z.GetComponent<GravityBlock>().blockType = blockType;
+            
+            z.GetComponent<GravityBlock>().chunkRenderer = hit.collider.gameObject.GetComponent<ChunkRenderer>();
+            
+            z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockType).particleMaterial;
+        }
     }
     
 }

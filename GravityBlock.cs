@@ -8,6 +8,8 @@ public class GravityBlock : MonoBehaviour
     private World world;
 
     public BlockType blockType;
+
+    public ChunkRenderer chunkRenderer;
     
     private void Awake()
     {
@@ -16,8 +18,8 @@ public class GravityBlock : MonoBehaviour
 
     private void OnCollisionEnter(Collision other)
     {
-        //Debug.Log("a");
-        world.SetBlock(other.gameObject.GetComponent<ChunkRenderer>(), blockType, transform.position);
+        world.SetBlockInt(transform.position,blockType ,chunkRenderer);
+        
         Destroy(this.gameObject);
     }
 }
