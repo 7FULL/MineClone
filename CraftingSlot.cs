@@ -6,10 +6,10 @@ using UnityEngine.EventSystems;
 
 public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
 {
-    CraftingManager cf;
+    public CraftingManager cf;
     [SerializeField] private int slot;
 
-    private DragDropItem item;
+    public DragDropItem item;
 
     private GameObject gameObjectItem;
 
@@ -17,7 +17,7 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
 
     private void Awake()
     {
-        cf = GetComponentInParent<CraftingManager>();
+        //cf = FindObjectOfType<CraftingManager>();
     }
 
     public void asign(DragDropItem dragDropItem)
@@ -39,7 +39,7 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
 
             update();
             
-            cf.UpdateOutputSlot();
+            cf.update();
         }
     }
     
@@ -60,7 +60,7 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
 
             update();
             
-            cf.UpdateOutputSlot();
+            cf.update();
         }
     }
 
@@ -69,15 +69,11 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
         this.item = dragItem;
 
         gameObjectItem = dragItem.gameObject;
-
-        update();
-            
-        cf.UpdateOutputSlot();
     }
 
     public void update()
     {
-        if (item != null)
+        if (item != null && gameObjectItem != null && item.itemMuch != 0)
         {
             if (slot == 0)
             {
@@ -99,6 +95,36 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
                 cf.item_11GameObject = gameObjectItem;
                 cf.item_11 = item.item;
                 cf.item_11Much = item.itemMuch;
+            }
+            else if (slot == 4)
+            {
+                cf.item_00GameObject = gameObjectItem;
+                cf.item_00 = item.item;
+                cf.item_00Much = item.itemMuch;
+            }
+            else if (slot == 5)
+            {
+                cf.item_10GameObject = gameObjectItem;
+                cf.item_10 = item.item;
+                cf.item_10Much = item.itemMuch;
+            }
+            else if (slot == 6)
+            {
+                cf.item_20GameObject = gameObjectItem;
+                cf.item_20 = item.item;
+                cf.item_20Much = item.itemMuch;
+            }
+            else if (slot == 7)
+            {
+                cf.item_21GameObject = gameObjectItem;
+                cf.item_21 = item.item;
+                cf.item_21Much = item.itemMuch;
+            }
+            else if (slot == 8)
+            {
+                cf.item_22GameObject = gameObjectItem;
+                cf.item_22 = item.item;
+                cf.item_22Much = item.itemMuch;
             }
         }
         else
@@ -124,9 +150,37 @@ public class CraftingSlot : MonoBehaviour, IDropHandler, Slot
                 cf.item_11 = GameManager.instance.defaultItem;
                 cf.item_11Much = 0;
             }
+            else if (slot == 4)
+            {
+                cf.item_00GameObject = null;
+                cf.item_00 = GameManager.instance.defaultItem;
+                cf.item_00Much = 0;
+            }
+            else if (slot == 5)
+            {
+                cf.item_10GameObject = null;
+                cf.item_10 = GameManager.instance.defaultItem;
+                cf.item_10Much = 0;
+            }
+            else if (slot == 6)
+            {
+                cf.item_20GameObject = null;
+                cf.item_20 = GameManager.instance.defaultItem;
+                cf.item_20Much = 0;
+            }
+            else if (slot == 7)
+            {
+                cf.item_21GameObject = null;
+                cf.item_21 = GameManager.instance.defaultItem;
+                cf.item_21Much = 0;
+            }
+            else if (slot == 8)
+            {
+                cf.item_22GameObject = null;
+                cf.item_22 = GameManager.instance.defaultItem;
+                cf.item_22Much = 0;
+            }
         }
-        
-        cf.UpdateDictionary();
     }
 
     public void clear()

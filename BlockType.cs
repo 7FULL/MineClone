@@ -20,5 +20,8 @@ public enum BlockType
     SAND,
     GRAVEL,
     DIAMANTE_ORE,
-    TABLONES_ROBLE
+    TABLONES_ROBLE,
+    COFRE,
+    BLOQUE_DE_DIAMANTE,
+    MESA_DE_CRAFTEO
 }

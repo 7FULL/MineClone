@@ -74,6 +74,8 @@ public class PlayerController3D : MonoBehaviour
     public GameObject dropableItem;
 
     public Inventory inventory;
+
+    public CraftingManager craftingManager;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -89,26 +91,34 @@ public class PlayerController3D : MonoBehaviour
         grounded = GetComponentInChildren<Grounded>();
     }
 
+    public void pararse()
+    {
+        rb.velocity = new Vector3(0, 0, 0);
+        inventoryGameObject.SetActive(true);
+        ableToMove = true;
+        Cursor.lockState = CursorLockMode.None;
+        ableToMove = false;
+        Cursor.visible = true;
+    }
+    
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             if(inventoryGameObject.activeInHierarchy)
             {
+                craftingManager.craftingTable.gameObject.SetActive(false);
+                craftingManager.gameObject.SetActive(true);
+
                 inventoryGameObject.SetActive(false);
                 ableToMove = true;
-                Cursor.lockState = CursorLockMode.Confined;
+                Cursor.lockState = CursorLockMode.Locked;
                 ableToMove = true;
                 Cursor.visible = false;
             }
             else
             {
-                rb.velocity = new Vector3(0, 0, 0);
-                inventoryGameObject.SetActive(true);
-                ableToMove = true;
-                Cursor.lockState = CursorLockMode.None;
-                ableToMove = false;
-                Cursor.visible = true;
+                pararse();
             }
         }
 
@@ -168,20 +178,20 @@ public class PlayerController3D : MonoBehaviour
 
                     if (broken)
                     {
-                        GameObject x = Instantiate(romperParticulas, lookingBlockPos, Quaternion.identity);
-
-                        x.GetComponent<ParticleSystemRenderer>().material = auxParticleMaterial;
-
-                        Destroy(x,2);
-
-                        BlockType blockTypeToCompare = world.GetBlock((hit.point - hit.normal * 0.01f),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+                        BlockType blockTypeToCompare = world.GetBlock((hit.point - hit.normal * 0.5f),hit.collider.gameObject.GetComponent<ChunkRenderer>());
 
                         GameObject drop = null;
                         
                         if (blockTypeToCompare != BlockType.AIR && blockTypeToCompare != BlockType.WATER && blockTypeToCompare != BlockType.NOTHING
                             && blockTypeToCompare != BlockType.TREE_LEAFS_SOLID && blockTypeToCompare != BlockType.TREE_LEAFES_TRANSPARENT)
                         {
-                            drop = Instantiate(dropableItem,world.GetBlockPos((hit.point - hit.normal * 0.01f)), Quaternion.identity);
+                            GameObject x = Instantiate(romperParticulas, lookingBlockPos, Quaternion.identity);
+
+                            x.GetComponent<ParticleSystemRenderer>().material = auxParticleMaterial;
+
+                            Destroy(x,2);
+                            
+                            drop = Instantiate(dropableItem,world.GetBlockPos((hit.point - hit.normal * 0.5f)), Quaternion.identity);
 
                             drop.GetComponent<DropableItem>().chunkRenderer =
                                 hit.collider.gameObject.GetComponent<ChunkRenderer>();
@@ -237,25 +247,36 @@ public class PlayerController3D : MonoBehaviour
                 if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
                 {
                     Vector3 aux = hit.point + (hit.normal * 0.5f);
+                    
+                    BlockType blockTypeToCompare = world.GetBlock((hit.point - hit.normal * 0.5f),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+                    
+                    Item item = GameManager.instance.getItem(blockTypeToCompare);
 
-                    //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
-                    if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                    if (!item.interactable)
                     {
-                        ModifyTerrain(hit, BlockType.SAND, aux);
+                        //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
+                        if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                        {
+                            ModifyTerrain(hit, BlockType.SAND, aux);
+                        }
+                    }
+                    else
+                    {
+                        item.interact();
                     }
                 }
             }
-        
+            
             if (Input.GetKeyDown(KeyCode.F))
             {
                 Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
@@ -263,21 +284,32 @@ public class PlayerController3D : MonoBehaviour
                 if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
                 {
                     Vector3 aux = hit.point + (hit.normal * 0.5f);
+                    
+                    BlockType blockTypeToCompare = world.GetBlock((hit.point - hit.normal * 0.5f),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+                    
+                    Item item = GameManager.instance.getItem(blockTypeToCompare);
 
-                    //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
-                    if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
-                        Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                    if (!item.interactable)
                     {
-                        ModifyTerrain(hit, BlockType.GRAVEL, aux);
+                        //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
+                        if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
+                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
+                        {
+                            ModifyTerrain(hit, BlockType.MESA_DE_CRAFTEO, aux);
+                        }
+                    }
+                    else
+                    {
+                        item.interact();
                     }
                 }
             }
@@ -364,21 +396,21 @@ public class PlayerController3D : MonoBehaviour
 
     private void ModifyTerrain(RaycastHit hit, BlockType blockType)
     {
-        BlockType blockAbove = world.GetBlock((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
+        BlockType blockAbove = world.GetBlock((hit.point-hit.normal * 0.5f)+new Vector3(0,1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
         
         int x = world.SetBlockInt(hit, blockType);
 
         //Es decir habia un bloque con gravedad arriba de el
         if (x == 2)
         {
-            GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0)), Quaternion.identity);
+            GameObject z=  Instantiate(bloqueGravedad, world.GetBlockPos((hit.point-hit.normal * 0.5f)+new Vector3(0,1,0)), Quaternion.identity);
             z.GetComponent<GravityBlock>().blockType = blockAbove;
             
             z.GetComponent<GravityBlock>().chunkRenderer = hit.collider.gameObject.GetComponent<ChunkRenderer>();
             
             z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockAbove).particleMaterial;
             
-            StartCoroutine(llamarDeNuevoTerrainGravity((hit.point-hit.normal * 0.01f)+new Vector3(0,1,0),blockType,hit.collider.gameObject.GetComponent<ChunkRenderer>()));
+            StartCoroutine(llamarDeNuevoTerrainGravity((hit.point-hit.normal * 0.5f)+new Vector3(0,1,0),blockType,hit.collider.gameObject.GetComponent<ChunkRenderer>()));
         }
     }
     
@@ -412,7 +444,7 @@ public class PlayerController3D : MonoBehaviour
     {
         BlockType blocKbelow = world.GetBlock((hit.point+hit.normal*0.5f)+new Vector3(0,-1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
         
-        if (GameManager.instance.getBlockData(blocKbelow).isSolid)
+        if (!GameManager.instance.getBlockData(blockType).isGravitationalBlock && GameManager.instance.getBlockData(blocKbelow).isSolid)
         {
             world.SetBlockInt(hit, blockType, posicionAColocar);
         }

@@ -47,16 +47,19 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
     public ChunkRenderer chunkRenderer;
 
-    private void Awake()
+    private void Start()
     {
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
 
         imagen.sprite = item.sprite;
 
-        cf = FindObjectOfType<CraftingManager>();
-
-        canvas = cf.canvas;
+        cf = GameManager.instance.player.GetComponent<PlayerController3D>().craftingManager;
+        
+        //Utilizar esto en escena de pruebas
+        //cf = FindObjectOfType<CraftingManager>();
+        
+        canvas = cf.getCanvas();
     }
 
     public void inicializarFoto()
@@ -73,20 +76,19 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         //canvasGroup.alpha = 0.6f;
         canvasGroup.blocksRaycasts = false;
         resetStartPosition();
-
+        
         if (isOutput)
         {
             cf.outputDone();
             isOutput = false;
             cf.update();
-            cf.UpdateOutputSlot();
         }
 
         if (lastWasCraftingSlot)
         {
             lastCraftingSlot.clear();
-            
-            cf.updateItems(eventData.pointerDrag);
+
+            cf.update();
         }
         
         if (lastWasInventorySlot)
@@ -112,38 +114,80 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         {
             if (PointerEventData.pointerEnter.name == "Panel")
             {
+                //Debug.Log("0");
+                
                 dropearSoloUno();
             }
             else if (PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>() != null)
             {
+                //Debug.Log("1");
+                
                 GameObject aux = Instantiate(dragDropItem, this.transform.parent.transform);
 
                 DragDropItem dragDrop= aux.GetComponent<DragDropItem>();
 
                 dragDrop.rectTransform.anchoredPosition = PointerEventData.pointerEnter.transform.parent.GetComponent<RectTransform>().anchoredPosition;
 
-                PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>().implementDrag(dragDrop);
-                
                 dragDrop.item = item;
                 dragDrop.actualizarCantidad(1);
                 dragDrop.inicializarFoto();
                 
+                PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>().implementDrag(dragDrop);
+                
                 restarCantidad(1);
                 
-                bool x = hacerCosasDeObjeto(PointerEventData,dragDrop);
+                //bool x = hacerCosasDeObjeto(PointerEventData,dragDrop);
 
-                dragDrop.canvasGroup.blocksRaycasts = true;
-                
                 transform.SetAsLastSibling();
 
-                if (x)
+                /*if (x)
                 {
                     Debug.Log("Destruido");
                     Destroy(aux);
+                }*/
+                
+                aux.GetComponent<CanvasGroup>().blocksRaycasts = true;
+                
+                Type t = PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>().GetType();
+                
+                if (t.Equals(typeof(CraftingSlot)))
+                {
+                    if (!PointerEventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>().isOutput)
+                    {
+                        //Debug.Log("a");
+                        
+                        lastWasCraftingSlot = true;
+                    
+                        lastCraftingSlot = PointerEventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>();
+                    }
+                    else
+                    {
+                        rectTransform.anchoredPosition = startedPosition;
+
+                        if (lastWasCraftingSlot)
+                        {
+                            lastCraftingSlot.asign(this);
+                        }
+                    }
+                    
+                    cf.update();
                 }
+
+                if (t.Equals(typeof(InventorySlots)))
+                {
+                    lastWasInventorySlot = true;
+                    
+                    lastInventorySlot = PointerEventData.pointerEnter.transform.parent.GetComponent<InventorySlots>();
+
+                    PointerEventData.pointerEnter.transform.parent.GetComponent<InventorySlots>().item = this;
+                }
+                
+                cf.update();
             }
-            else
+            else if(PointerEventData.pointerEnter.transform.parent.GetComponent<DragDropItem>() != null)
             {
+                //Debug.Log(PointerEventData.pointerEnter.transform.parent.name);
+                
                 GameObject aux = Instantiate(dragDropItem, this.transform.parent.transform);
 
                 DragDropItem dragDrop= aux.GetComponent<DragDropItem>();
@@ -154,9 +198,9 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 
                 restarCantidad(1);
                 
-                bool x = hacerCosasDeObjeto(PointerEventData,dragDrop);
+                hacerCosasDeObjeto(PointerEventData,dragDrop);
 
-                dragDrop.canvasGroup.blocksRaycasts = true;
+                aux.GetComponent<CanvasGroup>().blocksRaycasts = true;
                 
                 transform.SetAsLastSibling();
 
@@ -219,14 +263,14 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                         }
                         
                         //Updateamos aqui los slots tambien porque si juntamos 2 bloques dentro del craft no los detecta
-                        dropItem.cf.update();
-                    }
+                        cf.update();
+                        }
                     else
                     {
-                        Debug.Log("0");
-                        
+                        //Debug.Log("0");
+
                         otherItem.resetStartPosition();
-                    
+                        
                         RectTransform otherItemTransform = otherItem.gameObject.GetComponent<RectTransform>();
                         otherItemTransform.anchoredPosition = dropItem.startedPosition;
 
@@ -239,6 +283,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                         dropItem.rectTransform.anchoredPosition = otherItem.startedPosition;
 
                         dropItem.resetStartPosition();
+                        otherItem.resetStartPosition();
                         
                         if (dropItem.lastWasCraftingSlot)
                         {
@@ -259,9 +304,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                         {
                             otherItem.lastCraftingSlot.asign(this);
                         }
-                        
-                        dropItem.cf.update();
-                        
+
                         aux = true;
                     }
                     }
@@ -275,6 +318,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 {
                     if (!eventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>().isOutput)
                     {
+                        //Debug.Log("a");
+                        
                         dropItem.lastWasCraftingSlot = true;
                     
                         dropItem.lastCraftingSlot = eventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>();
@@ -288,6 +333,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                             dropItem.lastCraftingSlot.asign(this);
                         }
                     }
+                    
+                    cf.update();
                 }
 
                 if (t.Equals(typeof(InventorySlots)))
@@ -303,6 +350,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             {
                 dropItem.dropearItem();
             }
+            
+            cf.update();
 
             return aux;
     }
@@ -360,8 +409,6 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             drop.GetComponent<MeshRenderer>().material = GameManager.instance.defaultMaterial;
         }
         
-        
-        
         restarCantidad(1);
     }
     
@@ -404,7 +451,23 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (isOutput && Input.GetKey(KeyCode.LeftShift))
+        {
+            realizarOutput(item);
+        }
+    }
+
+    private void realizarOutput(Item item)
+    {
+        int x = cf.outputAllDone();
+        isOutput = false;
+        cf.update();
+
+        Debug.Log(x);
         
+        itemMuch = x;
+            
+        GameManager.instance.player.GetComponent<PlayerController3D>().inventory.añadirItem(item,x,chunkRenderer);
     }
 
     public void actualizarCantidad(int x)

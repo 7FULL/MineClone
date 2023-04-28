@@ -34,22 +34,9 @@ public class Recipe : ScriptableObject
     
     public int outputItemMuch = 1;
 
-    public Dictionary<Item,int> getItems()
+    public Item[] getItems()
     {
-        Dictionary<Item,int> x = new Dictionary<Item, int>()
-        {
-            {item_00,item_00Much},
-            {item_10,item_10Much},
-            {item_20,item_20Much},
-            
-            {item_01,item_01Much},
-            {item_11,item_11Much},
-            {item_21,item_21Much},
-            
-            {item_02,item_02Much},
-            {item_12,item_12Much},
-            {item_22,item_22Much},
-        };
+        Item[] x= new Item[]{item_02,item_12,item_01,item_11,item_00,item_10,item_20,item_21,item_22};
 
         return x;
     }
@@ -66,12 +53,20 @@ public class Recipe : ScriptableObject
 
         return x;
     }
+    
+    public int[] getItemsMuch()
+    {
+        int[] x= new int[]{item_02Much,item_12Much,item_01Much,item_11Much
+            ,item_00Much,item_10Much,item_20Much,item_21Much,item_22Much};
 
-    public Dictionary<Item,int> getOutputItem()
+        return x;
+    }
+
+    /*public Dictionary<Item,int> getOutputItem()
     {
         return new Dictionary<Item, int>()
         {
             { outputItem, outputItemMuch }
         };
-    }
+    }*/
 }

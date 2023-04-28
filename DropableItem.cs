@@ -18,6 +18,7 @@ public class DropableItem : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        Destroy(this.gameObject,10000);
     }
 
     private void OnTriggerEnter(Collider other)
