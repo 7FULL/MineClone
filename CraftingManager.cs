@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -169,8 +170,64 @@ public class CraftingManager : MonoBehaviour
                 return true;
             }
         }
-
+        
         return false;
+    }
+    
+    private int getMuchToOutput()
+    {
+        for (int i = 0; i < recipes.Length; i++)
+        {
+            Item[] recipeItems = recipes[i].getItems();
+            int[] recipeItemsMuch = recipes[i].getItemsMuch();
+
+            bool done = false;
+            
+            for (int j = 0; j < recipeItems.Length; j++)
+            {
+                if (recipeItems[j] != auxRecipeItem[j])
+                {
+                    //Debug.Log("Receta: "+recipeItems[j]);
+                    //Debug.Log("Item: "+auxRecipeItem[j]);
+                    done = true;
+                }
+            }
+            
+            for (int j = 0; j < recipeItemsMuch.Length; j++)
+            {
+                if (recipeItemsMuch[j] > auxRecipeItemMuch[j])
+                {
+                    done = true;
+                }
+            }
+            
+            if (!done)
+            {
+                int x = Int32.MaxValue;
+
+                int[] y = auxRecipeItemMuch;
+
+                for (int j = 0; j < recipeItemsMuch.Length; j++)
+                {
+                    int z = 0;
+                    
+                    while (recipeItemsMuch[j] != 0 && recipeItemsMuch[j] < y[j])
+                    {
+                        y[j] -= recipeItemsMuch[j];
+                        z++;
+                    }
+
+                    if (z < x)
+                    {
+                        x = z;
+                    }
+                }
+
+                return x;
+            }
+        }
+
+        return -1;
     }
 
     private void UpdateDictionary()
@@ -252,30 +309,20 @@ public class CraftingManager : MonoBehaviour
     
     public int outputAllDone()
     {
-        int x = 0;
+        int x = getMuchToOutput();
         
-        //Debug.Log("1");
         GameObject[] gameobjects = new[] { item_02GameObject, item_12GameObject, item_01GameObject, item_11GameObject, item_00GameObject, item_10GameObject, item_20GameObject,item_21GameObject,item_22GameObject};
 
-        do
+        for (int i = 0; i < gameobjects.Length; i++)
         {
-            for (int i = 0; i < auxRecipeItemMuch.Length; i++)
+            if (gameobjects[i] != null)
             {
-                auxRecipeItemMuch[i] -= lastAuxRecipeItemMuch[i];
-
-                x += outputItemMuch;
-                
-                if (gameobjects[i] != null)
-                {
-                    //gameobjects[i].GetComponent<DragDropItem>().item = auxRecipeItem[i];
-                    gameobjects[i].GetComponent<DragDropItem>().restarCantidad(lastAuxRecipeItemMuch[i]);
-                }
+                //gameobjects[i].GetComponent<DragDropItem>().item = auxRecipeItem[i];
+                gameobjects[i].GetComponent<DragDropItem>().restarCantidad(x);
             }
-        } while (!UpdateOutputSlot());
+        }
 
-        limpiarTodo();
-
-        return x;
+        return x * outputItemMuch;
     }
 
     private void limpiarTodo()

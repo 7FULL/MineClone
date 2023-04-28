@@ -461,6 +461,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
     {
         int x = cf.outputAllDone();
         isOutput = false;
+        
         cf.update();
 
         Debug.Log(x);
