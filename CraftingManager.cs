@@ -203,7 +203,7 @@ public class CraftingManager : MonoBehaviour
             
             if (!done)
             {
-                int x = Int32.MaxValue;
+                int x = 11111111;
 
                 int[] y = auxRecipeItemMuch;
 
@@ -211,18 +211,22 @@ public class CraftingManager : MonoBehaviour
                 {
                     int z = 0;
                     
-                    while (recipeItemsMuch[j] != 0 && recipeItemsMuch[j] < y[j])
+                    while (recipeItemsMuch[j] < y[j])
                     {
+                        //Debug.Log(y[j]);
+                        //Debug.Log(y[recipeItemsMuch[j]]);
                         y[j] -= recipeItemsMuch[j];
                         z++;
+                        //Debug.Log(z);
                     }
 
-                    if (z < x)
+                    if (z != 0)
                     {
                         x = z;
                     }
                 }
 
+                
                 return x;
             }
         }
@@ -310,6 +314,8 @@ public class CraftingManager : MonoBehaviour
     public int outputAllDone()
     {
         int x = getMuchToOutput();
+
+        x++;
         
         GameObject[] gameobjects = new[] { item_02GameObject, item_12GameObject, item_01GameObject, item_11GameObject, item_00GameObject, item_10GameObject, item_20GameObject,item_21GameObject,item_22GameObject};
 

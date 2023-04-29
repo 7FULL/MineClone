@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +10,18 @@ public class Inventory : MonoBehaviour
     public GameObject itemPrefab;
 
     public Transform itemsTransform;
+
+    /*private void Awake()
+    {
+        for (int i = 0; i < InventorySlots.Length; i++)
+        {
+            if (InventorySlots[i] == null)
+            {
+                //El primer .item es el DragDropItem del inventario
+                InventorySlots[i].item.item = GameManager.instance.defaultItem;
+            }
+        }
+    }*/
 
     public void añadirItem(Item item, int itemMuch,ChunkRenderer chunkRenderer)
     {
@@ -148,5 +161,37 @@ public class Inventory : MonoBehaviour
                             resetStartPosition();
                         }
                     }*/
+    }
+
+    /*private void Update()
+    {
+        if (Input.GetMouseButtonDown())
+        {
+            
+        }
+    }*/
+    public Item[] getHandSlots()
+    {
+        
+        //Como todavia no hemos mtido ningun item hay que inicializarlos todos al item por defecto porque si no devuelve null
+        
+        //Al no inicializarlo el DragDropItem tambien nos puede devolver null asique mejor que comporbar si es null y
+        //asignarle un item al DragDropItem mejor hacer la comporbacion y devolver directamente el item por defecto
+        List<Item> x = new List<Item>();
+        
+        for (int i = 0; i < 9; i++)
+        {
+            if (InventorySlots[i].item == null)
+            {
+                //Si no hay dragdropitem asignado devolvemos directamente el item por defecto
+                x.Add(GameManager.instance.defaultItem);
+            }
+            else
+            {
+                x.Add(InventorySlots[i].item.item);
+            }
+        }
+
+        return x.ToArray();
     }
 }

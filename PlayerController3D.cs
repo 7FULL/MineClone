@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 public class PlayerController3D : MonoBehaviour
@@ -76,6 +77,16 @@ public class PlayerController3D : MonoBehaviour
     public Inventory inventory;
 
     public CraftingManager craftingManager;
+    private int itemIndex = 0;
+    
+    private Item[] items;
+    
+    private int PreviousItemIndex=-1;
+
+    public Image handedItem;
+
+    private Item actualItem;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -89,8 +100,18 @@ public class PlayerController3D : MonoBehaviour
         romperSprite.transform.SetParent(world.transform);
 
         grounded = GetComponentInChildren<Grounded>();
+
+        actualizarItems();
+
+        //actualItem = GameManager.instance.defaultItem;
     }
 
+    public void actualizarItems()
+    {
+        items = inventory.getHandSlots();
+        EquipItem(itemIndex);
+    }
+    
     public void pararse()
     {
         rb.velocity = new Vector3(0, 0, 0);
@@ -100,9 +121,35 @@ public class PlayerController3D : MonoBehaviour
         ableToMove = false;
         Cursor.visible = true;
     }
-    
+
     void Update()
     {
+        if (Input.GetAxisRaw("Mouse ScrollWheel") < 0 && !inventoryGameObject.activeInHierarchy)
+        {
+            itemIndex++;
+            
+            if (itemIndex > items.Length - 1)
+            {
+                itemIndex = 0;
+            }
+            
+            EquipItem(itemIndex);
+            //Debug.Log(itemIndex);
+        }
+        else if (Input.GetAxisRaw("Mouse ScrollWheel") > 0 && !inventoryGameObject.activeInHierarchy)
+        {
+            itemIndex--;
+            
+            if (itemIndex < 0)
+            {
+                itemIndex = items.Length - 1;
+            }
+            
+            EquipItem(itemIndex);
+
+            //Debug.Log(itemIndex);
+        }
+        
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             if(inventoryGameObject.activeInHierarchy)
@@ -202,6 +249,8 @@ public class PlayerController3D : MonoBehaviour
                             }
 
                             Item item = GameManager.instance.getItem(blockTypeToCompare);
+                            
+                            //Debug.Log(blockTypeToCompare);
 
                             drop.GetComponent<DropableItem>().Item = item;
                             drop.GetComponent<DropableItem>().itemMuch = 1;
@@ -267,44 +316,10 @@ public class PlayerController3D : MonoBehaviour
                             Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                             Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                         {
-                            ModifyTerrain(hit, BlockType.SAND, aux);
-                        }
-                    }
-                    else
-                    {
-                        item.interact();
-                    }
-                }
-            }
-            
-            if (Input.GetKeyDown(KeyCode.F))
-            {
-                Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-            
-                if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
-                {
-                    Vector3 aux = hit.point + (hit.normal * 0.5f);
-                    
-                    BlockType blockTypeToCompare = world.GetBlock((hit.point - hit.normal * 0.5f),hit.collider.gameObject.GetComponent<ChunkRenderer>());
-                    
-                    Item item = GameManager.instance.getItem(blockTypeToCompare);
-
-                    if (!item.interactable)
-                    {
-                        //Para impedir poder poner un bloque donde esta el jugador posicionado calculamos todas las posiciones alrededor suya y no dejamos colocar bloques ahi
-                        if (Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,0)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,1,0)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,1,0)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,minDistanceToPlace)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,1,-minDistanceToPlace)) &&
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(minDistanceToPlace,0,0)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(-minDistanceToPlace,0,0)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,minDistanceToPlace)) && 
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
-                            Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
-                        {
-                            ModifyTerrain(hit, BlockType.MESA_DE_CRAFTEO, aux);
+                            if (actualItem != GameManager.instance.defaultItem && actualItem != null)
+                            {
+                                ModifyTerrain(hit, actualItem.BlockType, aux);
+                            }
                         }
                     }
                     else
@@ -314,6 +329,22 @@ public class PlayerController3D : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void EquipItem(int index)
+    {
+        Debug.Log(index);
+
+        if (items[index] != GameManager.instance.defaultItem)
+        {
+            handedItem.sprite = items[index].sprite;
+        }
+        else
+        {
+            handedItem.sprite = GameManager.instance.invisibleSprite;
+        }
+
+        actualItem = items[index];
     }
 
     private void FixedUpdate()
@@ -444,7 +475,9 @@ public class PlayerController3D : MonoBehaviour
     {
         BlockType blocKbelow = world.GetBlock((hit.point+hit.normal*0.5f)+new Vector3(0,-1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
         
-        if (!GameManager.instance.getBlockData(blockType).isGravitationalBlock && GameManager.instance.getBlockData(blocKbelow).isSolid)
+        
+        //O para que si sale que en el bloque de abajo es solido no instanciar un bloque con gravedad seria absurdo
+        if (!GameManager.instance.getBlockData(blockType).isGravitationalBlock || GameManager.instance.getBlockData(blocKbelow).isSolid)
         {
             world.SetBlockInt(hit, blockType, posicionAColocar);
         }

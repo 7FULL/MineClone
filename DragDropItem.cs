@@ -95,6 +95,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         {
             lastInventorySlot.clear();
         }
+        
+        GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -106,6 +108,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         hacerCosasDeObjeto(eventData,this);
         
         canvasGroup.blocksRaycasts = true;
+        
+        GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
     }
 
     private void Update()
@@ -115,8 +119,10 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             if (PointerEventData.pointerEnter.name == "Panel")
             {
                 //Debug.Log("0");
-                
+
                 dropearSoloUno();
+                
+                GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
             }
             else if (PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>() != null)
             {
@@ -183,6 +189,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 }
                 
                 cf.update();
+                
+                GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
             }
             else if(PointerEventData.pointerEnter.transform.parent.GetComponent<DragDropItem>() != null)
             {
@@ -207,6 +215,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 Destroy(aux);
                 
                 cf.update();
+                
+                GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
             }
         }
     }
@@ -273,12 +283,24 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                         
                         RectTransform otherItemTransform = otherItem.gameObject.GetComponent<RectTransform>();
                         otherItemTransform.anchoredPosition = dropItem.startedPosition;
+                        
+                        CraftingSlot xCS = otherItem.lastCraftingSlot;
+                        InventorySlots yIS = otherItem.lastInventorySlot;
+                        
+                        bool x = otherItem.lastWasCraftingSlot;
+                        bool y = otherItem.lastWasInventorySlot;
 
                         otherItem.lastCraftingSlot = dropItem.lastCraftingSlot;
                         otherItem.lastInventorySlot = dropItem.lastInventorySlot;
                         
                         otherItem.lastWasCraftingSlot = dropItem.lastWasCraftingSlot;
                         otherItem.lastWasInventorySlot = dropItem.lastWasInventorySlot;
+                        
+                        dropItem.lastCraftingSlot = xCS;
+                        dropItem.lastInventorySlot = yIS;
+                        
+                        dropItem.lastWasCraftingSlot = x;
+                        dropItem.lastWasInventorySlot = y;
 
                         dropItem.rectTransform.anchoredPosition = otherItem.startedPosition;
 
@@ -292,7 +314,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                         
                         if (otherItem.lastWasInventorySlot)
                         {
-                            otherItem.lastInventorySlot.asign(this);
+                            otherItem.lastInventorySlot.asign(otherItem);
                         }
                         
                         if (dropItem.lastWasInventorySlot)
@@ -302,7 +324,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                         
                         if (otherItem.lastWasCraftingSlot)
                         {
-                            otherItem.lastCraftingSlot.asign(this);
+                            otherItem.lastCraftingSlot.asign(otherItem);
                         }
 
                         aux = true;
@@ -454,6 +476,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         if (isOutput && Input.GetKey(KeyCode.LeftShift))
         {
             realizarOutput(item);
+            
+            //GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
         }
     }
 
@@ -464,11 +488,11 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         
         cf.update();
 
-        Debug.Log(x);
-        
         itemMuch = x;
             
         GameManager.instance.player.GetComponent<PlayerController3D>().inventory.añadirItem(item,x,chunkRenderer);
+        
+        //GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
     }
 
     public void actualizarCantidad(int x)
