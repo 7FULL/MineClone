@@ -79,13 +79,13 @@ public class PlayerController3D : MonoBehaviour
     public CraftingManager craftingManager;
     private int itemIndex = 0;
     
-    private Item[] items;
+    private DragDropItem[] items = new DragDropItem[9];
     
     private int PreviousItemIndex=-1;
 
     public Image handedItem;
 
-    private Item actualItem;
+    private DragDropItem actualItem;
 
     void Start()
     {
@@ -108,7 +108,14 @@ public class PlayerController3D : MonoBehaviour
 
     public void actualizarItems()
     {
-        items = inventory.getHandSlots();
+        try
+        {
+            items = inventory.getHandSlots();
+        }
+        catch (NullReferenceException e)
+        {
+            //No hacer nada ya sabemos que devuelve null lo hemos hecho aposta
+        }
         EquipItem(itemIndex);
     }
     
@@ -318,7 +325,21 @@ public class PlayerController3D : MonoBehaviour
                         {
                             if (actualItem != GameManager.instance.defaultItem && actualItem != null)
                             {
-                                ModifyTerrain(hit, actualItem.BlockType, aux);
+                                
+                                ModifyTerrain(hit, actualItem.item.BlockType, aux);
+
+                                int x = items[itemIndex].restarCantidad(1);
+
+                                actualizarItems();
+                                
+                                if (x == 0)
+                                {
+                                    handedItem.sprite = GameManager.instance.invisibleSprite;
+                                }
+                            }
+                            else
+                            {
+                                handedItem.sprite = GameManager.instance.invisibleSprite;
                             }
                         }
                     }
@@ -333,15 +354,16 @@ public class PlayerController3D : MonoBehaviour
 
     private void EquipItem(int index)
     {
-        Debug.Log(index);
+        //Debug.Log(index);
 
-        if (items[index] != GameManager.instance.defaultItem)
+        if (items[index] != null)
         {
-            handedItem.sprite = items[index].sprite;
+            handedItem.sprite = items[index].item.sprite;
         }
         else
         {
             handedItem.sprite = GameManager.instance.invisibleSprite;
+            //actualItem = GameManager.instance.defaultItem;
         }
 
         actualItem = items[index];

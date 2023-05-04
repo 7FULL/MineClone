@@ -213,21 +213,23 @@ public class CraftingManager : MonoBehaviour
                     
                     while (recipeItemsMuch[j] < y[j])
                     {
-                        //Debug.Log(y[j]);
                         //Debug.Log(y[recipeItemsMuch[j]]);
                         y[j] -= recipeItemsMuch[j];
                         z++;
-                        //Debug.Log(z);
+                        Debug.Log(z);
                     }
 
-                    if (z != 0)
+                    if (z < x && z != 0)
                     {
                         x = z;
                     }
                 }
 
-                
-                return x;
+
+                if (x != 11111111)
+                {
+                    return x;
+                }
             }
         }
 
@@ -315,7 +317,7 @@ public class CraftingManager : MonoBehaviour
     {
         int x = getMuchToOutput();
 
-        x++;
+        //x++;
         
         GameObject[] gameobjects = new[] { item_02GameObject, item_12GameObject, item_01GameObject, item_11GameObject, item_00GameObject, item_10GameObject, item_20GameObject,item_21GameObject,item_22GameObject};
 

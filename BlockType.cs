@@ -23,5 +23,6 @@ public enum BlockType
     TABLONES_ROBLE,
     COFRE,
     BLOQUE_DE_DIAMANTE,
-    MESA_DE_CRAFTEO
+    MESA_DE_CRAFTEO,
+    HARD_SAND
 }

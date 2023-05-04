@@ -110,6 +110,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         canvasGroup.blocksRaycasts = true;
         
         GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+        
+        cf.update();
     }
 
     private void Update()
@@ -477,7 +479,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         {
             realizarOutput(item);
             
-            //GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+            GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
         }
     }
 
@@ -512,15 +514,18 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         texto.text = itemMuch.ToString();
     }
     
-    public void restarCantidad(int x)
+    public int restarCantidad(int x)
     {
         itemMuch -= x;
         texto.text = itemMuch.ToString();
 
-        if (itemMuch == 0)
+        if (itemMuch <= 0)
         {
             Destroy(this.gameObject);
+            return 0;
         }
+        
+        return -1;
     }
 
     public void borrarItem()
