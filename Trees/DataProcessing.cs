@@ -28,7 +28,6 @@ public static class DataPorocessing
                 {
                     maximas.Add(new Vector2Int(xCoord + x, zCoord + y));
                 }
-
             }
         }
         return maximas;

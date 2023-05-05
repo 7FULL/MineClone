@@ -380,7 +380,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             return aux;
     }
 
-    private void dropearItem()
+    public void dropearItem()
     {
         GameObject drop = null;
                         
@@ -408,7 +408,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         Destroy(this.gameObject);
     }
     
-    private void dropearSoloUno()
+    public bool dropearSoloUno()
     {
         GameObject drop = null;
                         
@@ -433,7 +433,16 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             drop.GetComponent<MeshRenderer>().material = GameManager.instance.defaultMaterial;
         }
         
-        restarCantidad(1);
+        int x = restarCantidad(1);
+
+        if (x == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     
     public void resetStartPosition()
@@ -519,6 +528,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         itemMuch -= x;
         texto.text = itemMuch.ToString();
 
+        //En caso de que se destruya devolvemos un valor
         if (itemMuch <= 0)
         {
             Destroy(this.gameObject);

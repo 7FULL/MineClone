@@ -157,6 +157,19 @@ public class PlayerController3D : MonoBehaviour
             //Debug.Log(itemIndex);
         }
         
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+            if (items[itemIndex] != null)
+            {
+                if (items[itemIndex].dropearSoloUno())
+                {
+                    handedItem.sprite = GameManager.instance.invisibleSprite;
+                }
+            }
+            
+            //EquipItem(itemIndex);
+        }
+        
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             if(inventoryGameObject.activeInHierarchy)

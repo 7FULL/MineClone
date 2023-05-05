@@ -27,7 +27,7 @@ public class DirtLayerHandler : BlockLayerHandler
 
     protected override bool TryHandling(ChunkData chunkData, int x, int y, int z, int surfaceHeightNoise, Vector2Int mapSeedOffset)
     {
-        if (y < surfaceHeightNoise && y > surfaceHeightNoise - randomAlturas[contador])
+        if (y <= surfaceHeightNoise && y > surfaceHeightNoise - randomAlturas[contador])
         {
             if (contador < randomAlturas.Length-1)
             {
