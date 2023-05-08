@@ -6,6 +6,8 @@ public class TreeLayerHandler : BlockLayerHandler
 {
     public float terrainHeightLimit = 25;
 
+    public BlockType woodType = BlockType.MADERA_ROBLE;
+    
     public static List<Vector3Int> treeLeafesStaticLayout = new List<Vector3Int>
     {
         new Vector3Int(-2, 0, -2),
@@ -53,14 +55,15 @@ public class TreeLayerHandler : BlockLayerHandler
             && chunkData.treeData.treePositions.Contains(new Vector2Int(chunkData.worldPosition.x + x, chunkData.worldPosition.z + z)))
         {
             Vector3Int chunkCoordinates = new Vector3Int(x, surfaceHeightNoise, z);
+
             BlockType type = Chunk.GetBlockFromChunkCoordinates(chunkData, chunkCoordinates);
-            if (type == BlockType.GRASS_DIRT)
+            if (type == BlockType.GRASS_DIRT && IsAvailableNearBlocks(chunkData,chunkCoordinates))
             {
                 Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.DIRT);
                 for (int i = 1; i < 5; i++)
                 {
                     chunkCoordinates.y = surfaceHeightNoise + i;
-                    Chunk.SetBlock(chunkData, chunkCoordinates, BlockType.MADERA_ROBLE);
+                    Chunk.SetBlock(chunkData, chunkCoordinates, woodType);
                 }
                 foreach (Vector3Int leafPosition in treeLeafesStaticLayout)
                 {
@@ -69,5 +72,22 @@ public class TreeLayerHandler : BlockLayerHandler
             }
         }
         return false;
+    }
+
+    private bool IsAvailableNearBlocks(ChunkData chunkData, Vector3Int chunkCoordinates)
+    {
+        BlockType[] blocks = Chunk.GetAroundBlocksFromChunkCoordinates(chunkData, chunkCoordinates);
+
+        bool aux = true;
+
+        for (int i = 0; i < blocks.Length; i++)
+        {
+            if (blocks[i] == BlockType.MADERA_ABETO || blocks[i] == BlockType.MADERA_ROBLE)
+            {
+                aux = false;
+            }
+        }
+
+        return aux;
     }
 }

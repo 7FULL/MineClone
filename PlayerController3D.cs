@@ -16,8 +16,6 @@ public class PlayerController3D : MonoBehaviour
     public float runningSpeed = 11.5f;
     public float jumpSpeed = 8.0f;
 
-    public float gravity = 1f;
-    
     /*--------------------------*/
     
     public Camera playerCamera;
@@ -389,8 +387,6 @@ public class PlayerController3D : MonoBehaviour
             if (rb.velocity.magnitude < maxSpeed)
             {
                 rb.velocity = new Vector3(moveDirection.x, rb.velocity.y, moveDirection.z);
-
-                rb.AddForce(gravity * Vector3.down);
             }
 
             if (!sprint)
@@ -527,5 +523,13 @@ public class PlayerController3D : MonoBehaviour
             z.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(blockType).particleMaterial;
         }
     }
-    
+
+    //Utilizar para debuguear el cambio de biomas en minecraft
+    /*private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        
+        //128 es el tamaño del mapa de minecraft en pixeles
+        Gizmos.DrawWireCube(transform.position,new Vector3(128,500,128));
+    }*/
 }

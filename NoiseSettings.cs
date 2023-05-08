@@ -13,8 +13,11 @@ public class NoiseSettings : ScriptableObject
     public Vector2Int offest;
     [Header("Concepto como la semilla del mundo")]
     public Vector2Int worldOffset;
-    [Header("Irregularidad del terreno")]
+    [Header("Irregularidad/Suavidad del terreno")]
     public float persistance;
+    [Space]
+    [Header("Estos valores no pertenecen a la generacion del noise si no a como se aplica luego")]
+    [Space]
     [Header("Como de distribuidos son los cambio entre valles y colinas y que tan exagerados son las conexiones entre ellos")]
     public float redistributionModifier;
     public float exponent;

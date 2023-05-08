@@ -46,5 +46,6 @@ public enum BlockType
     IRON_PICKAGUE,
     TELARAÑA,
     TNT,
-    GLASS
+    GLASS,
+    SNOW_GRASS
 }

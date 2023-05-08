@@ -44,6 +44,30 @@ public static class Chunk
     {
         return GetBlockFromChunkCoordinates(chunkData, chunkCoordinates.x, chunkCoordinates.y, chunkCoordinates.z);
     }
+    
+    public static BlockType[] GetAroundBlocksFromChunkCoordinates(ChunkData chunkData, Vector3Int chunkCoordinates)
+    {
+        Vector3Int[] aroundPositions = {
+            new Vector3Int(-1,-1,-1), new Vector3Int(-1,-1,0), new Vector3Int(-1,-1,1),
+            new Vector3Int(-1,0,-1), new Vector3Int(-1,0,0), new Vector3Int(-1,0,1),
+            new Vector3Int(-1,1,-1), new Vector3Int(-1,1,0), new Vector3Int(-1,1,1),
+            new Vector3Int(0,-1,-1), new Vector3Int(0,-1,0), new Vector3Int(0,-1,1),
+            new Vector3Int(0,0,-1), new Vector3Int(0,0,0), new Vector3Int(0,0,1),
+            new Vector3Int(0,1,-1), new Vector3Int(0,1,0), new Vector3Int(0,1,1),
+            new Vector3Int(1,-1,-1), new Vector3Int(1,-1,0), new Vector3Int(1,-1,1),
+            new Vector3Int(1,0,-1), new Vector3Int(1,0,0), new Vector3Int(1,0,1),
+            new Vector3Int(1,1,-1), new Vector3Int(1,1,0), new Vector3Int(1,1,1)
+        };
+        
+        List<BlockType> x = new List<BlockType>();
+
+        for (int i = 0; i < aroundPositions.Length; i++)
+        {
+            x.Add(GetBlockFromChunkCoordinates(chunkData, chunkCoordinates.x + aroundPositions[i].x, chunkCoordinates.y + aroundPositions[i].y, chunkCoordinates.z + aroundPositions[i].z));
+        }
+        
+        return x.ToArray();
+    }
 
     public static BlockType GetBlockFromChunkCoordinates(ChunkData chunkData, int x, int y, int z)
     {

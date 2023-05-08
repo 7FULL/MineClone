@@ -412,7 +412,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
     {
         GameObject drop = null;
                         
-        drop = Instantiate(dropableItem,GameManager.instance.player.transform.position+(GameManager.instance.player.transform.forward*0.5f), Quaternion.identity);
+        drop = Instantiate(dropableItem,GameManager.instance.player.transform.position+(GameManager.instance.player.transform.forward*0.5f)+new Vector3(0,0.5f,0), Quaternion.identity);
 
         drop.GetComponent<DropableItem>().Item = item;
         
@@ -420,7 +420,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         
         drop.GetComponent<DropableItem>().chunkRenderer = chunkRenderer;
         
-        drop.GetComponent<Rigidbody>().AddForce(GameManager.instance.player.transform.forward*200);
+        drop.GetComponent<Rigidbody>().AddForce(GameManager.instance.player.transform.forward*800);
 
         Block block = GameManager.instance.getBlockData(item.BlockType);
 

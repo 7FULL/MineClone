@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class WorldRenderer : MonoBehaviour
 {
@@ -37,6 +38,7 @@ public class WorldRenderer : MonoBehaviour
         newChunk.InitializeChunk(worldData.chunkDataDictionary[position]);
         newChunk.UpdateChunk(meshData);
         newChunk.gameObject.SetActive(true);
+        //newChunk.GetComponent<NavMeshSurface>().BuildNavMesh();
         return newChunk;
     }
 
