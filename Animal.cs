@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -22,11 +23,25 @@ public class Animal : Entity
     
     private bool falling = false;
 
+    private int timesJumped = 0;
+
+    private bool running = false;
+
+    private Vector3 pos;
+
+    public int auxPosCountdown = 150;
+
+    private int startedCountdown;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         
         randomDirection();
+
+        pos = transform.position;
+
+        startedCountdown = auxPosCountdown;
     }
 
     void Update()
@@ -39,6 +54,19 @@ public class Animal : Entity
 
     void FixedUpdate()
     {
+        auxPosCountdown--;
+
+        if (auxPosCountdown <= 0)
+        {
+            if (new Vector3Int(Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), Mathf.RoundToInt(pos.z)) == 
+                new Vector3Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y), Mathf.RoundToInt(transform.position.z)))
+            {
+                randomDirection();
+            }
+
+            auxPosCountdown = startedCountdown;
+        }
+        
         if (isMoving)
         {
             CheckForObstacles();
@@ -47,7 +75,7 @@ public class Animal : Entity
 
     public void SetDestination(Vector3 newDestination)
     {
-        Debug.Log("Nuevo destino: "+newDestination);
+        //Debug.Log("Nuevo destino: "+newDestination);
         
         destination = newDestination;
         isMoving = true;
@@ -76,16 +104,44 @@ public class Animal : Entity
         
         if (Vector2.Distance(auxThis,auxDestination) <= stopDistance)
         {
-            Debug.Log("He llegado");
+            //Debug.Log("He llegado");
             stop();
-            randomDirection();
+            if (!running)
+            {
+                randomDirection();
+            }
+            else
+            {
+                huir();
+            }
         }
     }
 
     private void Jump()
     {
-        Debug.Log("He saltado");
+        //Debug.Log("He saltado");
         rb.AddForce(Vector3.up * jumpSpeed,ForceMode.Impulse);
+
+        timesJumped++;
+        
+        if (timesJumped >= 5 && !running)
+        {
+            randomDirection();
+        }
+        else if(running)
+        {
+            huir();
+        }
+    }
+    
+    public override void Jump(Vector3 x)
+    {
+        jumped = true;
+        
+        //Debug.Log("He saltado");
+        rb.AddForce(x * jumpSpeed,ForceMode.Impulse);
+
+        randomDirection();
     }
 
     private void CheckForObstacles()
@@ -105,8 +161,15 @@ public class Animal : Entity
             }
             else
             {
-                Debug.Log("No nos caemos pero no hay bloque al que saltar");
-                randomDirection();
+                //Debug.Log("No nos caemos pero no hay bloque al que saltar");
+                if (!running)
+                {
+                    randomDirection();
+                }
+                else
+                {
+                    huir();
+                }
             }
         }
         else
@@ -141,29 +204,68 @@ public class Animal : Entity
 
         if (!Physics.Raycast(fallLaser.position, -fallLaser.up, out hitInfo, maxFallDistance))
         {
-            Debug.Log("Me caigo");
+            //Debug.Log("Me caigo");
             stop();
-            randomDirection();
+            if (!running)
+            {
+                randomDirection();
+            }
+            else
+            {
+                huir();
+            }
         }
     }
 
     private void stop()
     {
-        Debug.Log("Parado");
+        //Debug.Log("Parado");
+
+        timesJumped = 0;
         
         isMoving = false;
         rb.velocity = new Vector3(0, 0, 0);
     }
-    
-    private void randomDirection()
+
+    public override void randomDirection()
     {
         stop();
+
+        float x = Random.Range(1, 10);
+        
+        Invoke("asignar",x);
+    }
+
+    private void asignar()
+    {
+        Vector3 randomDirection = Random.insideUnitSphere * moveRadius;
+        randomDirection += transform.position;
+        SetDestination(randomDirection);
+    }
+
+    public override void huir()
+    {
+        stop();
+
+        if (!running)
+        {
+            StartCoroutine(restart());
+        }
+        
+        running = true;
         
         Vector3 randomDirection = Random.insideUnitSphere * moveRadius;
         randomDirection += transform.position;
         SetDestination(randomDirection);
     }
-    
+
+    IEnumerator restart()
+    {
+        yield return new WaitForSecondsRealtime(8);
+
+        running = false;
+    }
+
     private void OnDrawGizmos()
     {
         //Gizmos.DrawRay(jumpLaser.position, jumpLaser.forward);

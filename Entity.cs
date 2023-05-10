@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Entity: MonoBehaviour
+public abstract class Entity: MonoBehaviour
 {
     private string nombre;
 
     private int id;
 
-    private int life;
+    private int life = 10;
 
     public string Nombre
     {
@@ -28,14 +28,23 @@ public class Entity: MonoBehaviour
         set => life = value;
     }
 
-    protected Entity(string nombre, int id, int life)
+    public void takeDamage(int damage)
     {
-        this.nombre = nombre;
-        this.id = id;
-        this.life = life;
+        life -= damage;
+
+        if (life <= 0)
+        {
+            die();   
+        }
     }
 
-    protected Entity()
+    private void die()
     {
+        Destroy(this.gameObject);
     }
+
+    public abstract void Jump(Vector3 x);
+
+    public abstract void randomDirection();
+    public abstract void huir();
 }

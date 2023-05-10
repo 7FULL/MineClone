@@ -84,9 +84,17 @@ public class PlayerController3D : MonoBehaviour
     public Image handedItem;
 
     private DragDropItem actualItem;
+    
+    public float attackSpeed = 5;
+
+    private float countdown = 0.55f;
+
+    private float startedTime = 5;
 
     void Start()
     {
+        startedTime = attackSpeed;
+        
         rb = GetComponent<Rigidbody>();
         
         // Lock cursor
@@ -213,11 +221,29 @@ public class PlayerController3D : MonoBehaviour
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
-        
-            if (Input.GetMouseButton(0))
-            {
-                Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+
+            bool atacado = false;
             
+            Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+
+            if (attackSpeed <= 0 && Input.GetMouseButton(0))
+            {
+                if (Physics.Raycast(ray, out RaycastHit hit2, reachDistance))
+                {
+                    if (hit2.collider.gameObject.GetComponent<Entity>() != null)
+                    {
+                        atacado = true;
+                        
+                        hit2.collider.gameObject.GetComponent<Entity>().takeDamage(1);
+                        hit2.collider.gameObject.GetComponent<Entity>().Jump((transform.forward*0.5f+Vector3.up));
+                        hit2.collider.gameObject.GetComponent<Entity>().huir();
+                    }
+                }
+                attackSpeed = startedTime;
+            }
+        
+            if (Input.GetMouseButton(0) && !atacado)
+            {
                 if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
                 {
                     romperSprite.gameObject.SetActive(true);
@@ -309,8 +335,6 @@ public class PlayerController3D : MonoBehaviour
         
             if (Input.GetMouseButtonDown(1))
             {
-                Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-            
                 if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
                 {
                     Vector3 aux = hit.point + (hit.normal * 0.5f);
@@ -382,6 +406,8 @@ public class PlayerController3D : MonoBehaviour
 
     private void FixedUpdate()
     {
+        attackSpeed -= countdown;
+
         if (ableToMove)
         {
             if (rb.velocity.magnitude < maxSpeed)
