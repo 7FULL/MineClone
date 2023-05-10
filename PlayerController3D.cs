@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-public class PlayerController3D : MonoBehaviour
+public class PlayerController3D : Entity
 {
     public float maxSpeed = 9f;
     
@@ -91,6 +92,8 @@ public class PlayerController3D : MonoBehaviour
 
     private float startedTime = 5;
 
+    public ChunkRenderer lastChunkRenderer;
+
     void Start()
     {
         startedTime = attackSpeed;
@@ -110,6 +113,15 @@ public class PlayerController3D : MonoBehaviour
         actualizarItems();
 
         //actualItem = GameManager.instance.defaultItem;
+
+        //Actualizamos la vida a la del jugador
+        Life = 20;
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.LoadScene(0);
+        Debug.Break();
     }
 
     public void actualizarItems()
@@ -252,6 +264,8 @@ public class PlayerController3D : MonoBehaviour
                 
                     lookingBlockPos = world.GetBlockPos(hit);
 
+                    lastChunkRenderer = hit.collider.gameObject.GetComponent<ChunkRenderer>();
+
                     if (blockType != BlockType.AIR && blockType != BlockType.NOTHING && blockType != BlockType.WATER && lookingBlockPos != lastBlockPos)
                     {
 
@@ -385,6 +399,21 @@ public class PlayerController3D : MonoBehaviour
                 }
             }
         }
+    }
+
+    public override void Jump(Vector3 x)
+    {
+        
+    }
+
+    public override void randomDirection()
+    {
+        
+    }
+
+    public override void huir()
+    {
+        
     }
 
     private void EquipItem(int index)

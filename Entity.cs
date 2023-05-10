@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,7 +9,34 @@ public abstract class Entity: MonoBehaviour
 
     private int id;
 
-    private int life = 10;
+    private float life = 10;
+
+    public Item itemDropable;
+
+    public int itemMuch = 1;
+
+    public GameObject dropItem;
+
+    private void Update()
+    {
+        if (transform.position.y < 256)
+        {
+            Destroy(this.gameObject);
+        }
+    }
+
+    public void dropear()
+    {
+        GameObject drop = Instantiate(dropItem,transform.position, Quaternion.identity);
+
+        drop.GetComponent<DropableItem>().chunkRenderer = GameManager.instance.player.GetComponent<PlayerController3D>().lastChunkRenderer;
+        
+        //Debug.Log(blockTypeToCompare);
+
+        drop.GetComponent<DropableItem>().Item = itemDropable;
+        drop.GetComponent<MeshRenderer>().material = GameManager.instance.getBlockData(itemDropable.BlockType).particleMaterial;
+        drop.GetComponent<DropableItem>().itemMuch = itemMuch;
+    }
 
     public string Nombre
     {
@@ -22,13 +50,13 @@ public abstract class Entity: MonoBehaviour
         set => id = value;
     }
 
-    public int Life
+    public float Life
     {
         get => life;
         set => life = value;
     }
 
-    public void takeDamage(int damage)
+    public void takeDamage(float damage)
     {
         life -= damage;
 
@@ -40,6 +68,8 @@ public abstract class Entity: MonoBehaviour
 
     private void die()
     {
+        dropear();
+        
         Destroy(this.gameObject);
     }
 

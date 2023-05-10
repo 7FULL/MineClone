@@ -33,6 +33,8 @@ public class Animal : Entity
 
     private int startedCountdown;
 
+    public float actualLife = 10;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -42,6 +44,8 @@ public class Animal : Entity
         pos = transform.position;
 
         startedCountdown = auxPosCountdown;
+
+        Life = actualLife;
     }
 
     void Update()
@@ -69,6 +73,11 @@ public class Animal : Entity
         
         if (isMoving)
         {
+            Vector3 newDestination = destination;
+            //Si el punto esta debajo se va a rotar entero para intentar mirarlo 
+            newDestination.y = transform.position.y;
+        
+            transform.LookAt(newDestination);
             CheckForObstacles();
         }
     }
