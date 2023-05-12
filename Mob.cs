@@ -33,9 +33,9 @@ public class Mob : Entity
 
     private int startedCountdown;
 
-    public float damage = 4.5f;
+    public int damage = 5;
     
-    public float actualLife = 10;
+    public int actualLife = 10;
     
     private int cooldown = 0;
 

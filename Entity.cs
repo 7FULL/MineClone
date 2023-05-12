@@ -9,7 +9,7 @@ public abstract class Entity: MonoBehaviour
 
     private int id;
 
-    private float life = 10;
+    private int life = 10;
 
     public Item itemDropable;
 
@@ -50,13 +50,13 @@ public abstract class Entity: MonoBehaviour
         set => id = value;
     }
 
-    public float Life
+    public int Life
     {
         get => life;
         set => life = value;
     }
 
-    public void takeDamage(float damage)
+    public void takeDamage(int damage)
     {
         life -= damage;
 
@@ -66,7 +66,7 @@ public abstract class Entity: MonoBehaviour
         }
     }
 
-    private void die()
+    public void die()
     {
         dropear();
         

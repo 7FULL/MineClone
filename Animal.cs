@@ -33,7 +33,7 @@ public class Animal : Entity
 
     private int startedCountdown;
 
-    public float actualLife = 10;
+    public int actualLife = 10;
 
     void Start()
     {

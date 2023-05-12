@@ -94,6 +94,14 @@ public class PlayerController3D : Entity
 
     public ChunkRenderer lastChunkRenderer;
 
+    public Sprite[] uiSprites;
+
+    public Image[] uiImages;
+
+    private int actualLife = 20;
+
+    private int actualHunger = 15;
+
     void Start()
     {
         startedTime = attackSpeed;
@@ -115,7 +123,11 @@ public class PlayerController3D : Entity
         //actualItem = GameManager.instance.defaultItem;
 
         //Actualizamos la vida a la del jugador
-        Life = 20;
+        actualLife = Life;
+        actualLife = 20;
+        
+        calcularCorazones();
+        calcularComida();
     }
 
     private void OnDestroy()
@@ -431,6 +443,78 @@ public class PlayerController3D : Entity
         }
 
         actualItem = items[index];
+    }
+    
+    public void takeDamage(int damage)
+    {
+        actualLife -= damage;
+
+        calcularCorazones();
+        
+        if (actualLife <= 0)
+        {
+            die();   
+        }
+    }
+
+    private void calcularCorazones()
+    {
+        Image[] corazones = new[] { uiImages[0],uiImages[1],uiImages[2],uiImages[3],uiImages[4],uiImages[5],uiImages[6],uiImages[7],uiImages[8],uiImages[9] };
+
+        for (int i = 0; i < corazones.Length; i++)
+        {
+            corazones[i].sprite = uiSprites[0];//Corazon vacio
+        }
+
+        int auxLife = actualLife;
+
+        bool half = false;
+        
+        if (auxLife % 2 != 0)
+        {
+            half = true;
+            auxLife--;
+        }
+
+        for (int i = 0; i < auxLife/2; i++)
+        {
+            corazones[i].sprite = uiSprites[1];//Corazon lleno
+        }
+
+        if (half)
+        {
+            corazones[auxLife/2].sprite = uiSprites[2];//Corazon a la mitad
+        }
+    }
+    
+    private void calcularComida()
+    {
+        Image[] corazones = new[] { uiImages[10],uiImages[11],uiImages[12],uiImages[13],uiImages[14],uiImages[15],uiImages[16],uiImages[17],uiImages[18],uiImages[19] };
+
+        for (int i = 0; i < corazones.Length; i++)
+        {
+            corazones[i].sprite = uiSprites[3];//Comida vacio
+        }
+
+        int auxLife = actualHunger;
+
+        bool half = false;
+        
+        if (auxLife % 2 != 0)
+        {
+            half = true;
+            auxLife--;
+        }
+
+        for (int i = 0; i < auxLife/2; i++)
+        {
+            corazones[i].sprite = uiSprites[4];//Comida lleno
+        }
+
+        if (half)
+        {
+            corazones[auxLife/2].sprite = uiSprites[5];//Comida a la mitad
+        }
     }
 
     private void FixedUpdate()
