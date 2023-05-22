@@ -47,6 +47,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
     public ChunkRenderer chunkRenderer;
 
+    private PlayerController3D player;
+
     private void Start()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -60,6 +62,8 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         //cf = FindObjectOfType<CraftingManager>();
         
         canvas = cf.getCanvas();
+
+        player = GameManager.instance.player.GetComponent<PlayerController3D>();
     }
 
     public void inicializarFoto()
@@ -96,7 +100,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             lastInventorySlot.clear();
         }
         
-        GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+        player.updateItems();
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -109,7 +113,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         
         canvasGroup.blocksRaycasts = true;
         
-        GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+        player.updateItems();
         
         cf.update();
     }
@@ -124,7 +128,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
                 dropearSoloUno();
                 
-                GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+                GameManager.instance.player.GetComponent<PlayerController3D>().updateItems();
             }
             else if (PointerEventData.pointerEnter.transform.parent.GetComponent<Slot>() != null)
             {
@@ -164,17 +168,17 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                     {
                         //Debug.Log("a");
                         
-                        lastWasCraftingSlot = true;
+                        dragDrop.lastWasCraftingSlot = true;
                     
-                        lastCraftingSlot = PointerEventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>();
+                        dragDrop.lastCraftingSlot = PointerEventData.pointerEnter.transform.parent.GetComponent<CraftingSlot>();
                     }
                     else
                     {
                         rectTransform.anchoredPosition = startedPosition;
 
-                        if (lastWasCraftingSlot)
+                        if (dragDrop.lastWasCraftingSlot)
                         {
-                            lastCraftingSlot.asign(this);
+                            dragDrop.lastCraftingSlot.asign(this);
                         }
                     }
                     
@@ -183,16 +187,18 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
                 if (t.Equals(typeof(InventorySlots)))
                 {
-                    lastWasInventorySlot = true;
+                    dragDrop.lastWasInventorySlot = true;
                     
-                    lastInventorySlot = PointerEventData.pointerEnter.transform.parent.GetComponent<InventorySlots>();
+                    dragDrop.lastInventorySlot = PointerEventData.pointerEnter.transform.parent.GetComponent<InventorySlots>();
 
-                    PointerEventData.pointerEnter.transform.parent.GetComponent<InventorySlots>().item = this;
+                    PointerEventData.pointerEnter.transform.parent.GetComponent<InventorySlots>().item = dragDrop;
                 }
                 
                 cf.update();
                 
-                GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+                GameManager.instance.player.GetComponent<PlayerController3D>().updateItems();
+
+                //GameManager.instance.player.GetComponent<PlayerController3D>().updateHandSlots();
             }
             else if(PointerEventData.pointerEnter.transform.parent.GetComponent<DragDropItem>() != null)
             {
@@ -218,7 +224,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 
                 cf.update();
                 
-                GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+                GameManager.instance.player.GetComponent<PlayerController3D>().updateItems();
             }
         }
     }
@@ -236,7 +242,27 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
                 {
                     //Debug.Log("0");
                     aux = true;
-                    dropItem.rectTransform.anchoredPosition = dropItem.startedPosition;
+
+                    if (lastWasInventorySlot && lastInventorySlot.item == null)
+                    {
+                        dropItem.rectTransform.anchoredPosition = dropItem.startedPosition;
+                    }
+                    else
+                    {
+                        player.inventory.añadirItem(dropItem);
+                        Destroy(dropItem.gameObject);
+                        return false;
+                    }
+
+                    if (lastWasCraftingSlot)
+                    {
+                        lastCraftingSlot.item = dropItem;
+                    }
+
+                    if (lastWasInventorySlot)
+                    {
+                        lastInventorySlot.item = dropItem;
+                    }
                 }else{
                     if (eventData.pointerEnter.name != "Panel")
                     {
@@ -488,7 +514,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         {
             realizarOutput(item);
             
-            GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+            GameManager.instance.player.GetComponent<PlayerController3D>().updateItems();
         }
     }
 
@@ -503,7 +529,7 @@ public class DragDropItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
             
         GameManager.instance.player.GetComponent<PlayerController3D>().inventory.añadirItem(item,x,chunkRenderer);
         
-        //GameManager.instance.player.GetComponent<PlayerController3D>().actualizarItems();
+        //GameManager.instance.player.GetComponent<PlayerController3D>().updateItems();
     }
 
     public void actualizarCantidad(int x)

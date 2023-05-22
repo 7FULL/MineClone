@@ -16,9 +16,10 @@ public class Item : ScriptableObject,Interactable
     public bool isPlacable = true;
 
     public bool interactable = false;
-    public void interact()
+    public void interact(Vector3Int posicion = new Vector3Int(), RaycastHit hit = default)
     {
-        InteractableManager.Interact(this);
+        InteractableManager.instance.Interact(this,posicion, hit);
+        //Debug.Log(this.name);
     }
 
     public override string ToString()

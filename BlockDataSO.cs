@@ -23,5 +23,7 @@ public class Block
     public Material particleMaterial;
 
     public bool isGravitationalBlock = false;
+
+    public bool transparent = false;
 }
 

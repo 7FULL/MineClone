@@ -47,5 +47,6 @@ public enum BlockType
     TELARAÑA,
     TNT,
     GLASS,
-    SNOW_GRASS
+    SNOW_GRASS,
+    TNT_ACTIVE
 }

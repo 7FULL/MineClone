@@ -27,7 +27,7 @@ public class DropableItem : MonoBehaviour
         {
             //Debug.Log("Picked");
             other.gameObject.GetComponentInParent<PlayerController3D>().inventory.añadirItem(Item,itemMuch,chunkRenderer);
-            other.gameObject.GetComponentInParent<PlayerController3D>().actualizarItems();
+            other.gameObject.GetComponentInParent<PlayerController3D>().updateItems();
             Destroy(this.gameObject);
         }
     }

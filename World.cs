@@ -384,10 +384,7 @@ public class World : MonoBehaviour
 
     private float GetBlockPositionIn(float pos, float normal)
     {
-        if (Mathf.Abs(pos % 1) == 0.5f)
-        {
-            pos -= (normal / 2);
-        }
+        pos -= normal * 0.2f;
 
 
         return (float)pos;

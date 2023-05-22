@@ -7,9 +7,21 @@ public class Grounded : MonoBehaviour
 {
     public bool isGrounded = false;
 
+    private PlayerController3D player;
+
+    private void Start()
+    {
+        player = GetComponentInParent<PlayerController3D>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         isGrounded = true;
+        if (player.explosionCurrent)
+        {
+            player.ableToMove = true;
+            player.explosionCurrent = false;
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -20,5 +32,11 @@ public class Grounded : MonoBehaviour
     private void OnTriggerStay(Collider other)
     {
         isGrounded = true;
+        
+        if (player.explosionCurrent)
+        {
+            player.ableToMove = true;
+            player.explosionCurrent = false;
+        }
     }
 }

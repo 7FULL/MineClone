@@ -39,6 +39,15 @@ public class BiomeGenerator : MonoBehaviour
         for (int y = data.worldPosition.y; y < data.worldPosition.y + data.chunkHeight; y++)
         {
             startLayerHandler.Handle(data, x, y, z, groundPosition, mapSeedOffset);
+            /*if (!startLayerHandler.isAuxiliarWaterHandler)
+            {
+                startLayerHandler.Handle(data, x, y, z, groundPosition, mapSeedOffset);
+            }
+            else
+            {
+                int auxgroundPosition = GetSurfaceHeightNoise(data.worldPosition.x + x, data.worldPosition.z + z, data.chunkHeight);
+                startLayerHandler.Handle(data, x, y, z, groundPosition, mapSeedOffset);
+            }*/
         }
 
         foreach (BlockLayerHandler layer in additionalLayerHandlers)

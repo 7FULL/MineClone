@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface Interactable
 {
-    public void interact();
+    public void interact(Vector3Int posicion = new Vector3Int(), RaycastHit hit = default);
 }
