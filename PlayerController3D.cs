@@ -773,6 +773,8 @@ public class PlayerController3D : Entity
         BlockType blockAbove = world.GetBlock((hit.point-hit.normal * 0.5f)+new Vector3(0,1,0),hit.collider.gameObject.GetComponent<ChunkRenderer>());
         
         int x = world.SetBlockInt(hit, blockType);
+        
+        Debug.Log(world.GetBlockPos((hit.point-hit.normal * 0.5f)));
 
         //Es decir habia un bloque con gravedad arriba de el
         if (x == 2)

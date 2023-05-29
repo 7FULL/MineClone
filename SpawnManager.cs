@@ -8,7 +8,10 @@ public class SpawnManager : MonoBehaviour
 {
     private List<GameObject> mobs = new List<GameObject>();
     
-    public GameObject[] mobPrefab;
+    private GameObject[] mobPrefab;
+    
+    public GameObject[] dayMobs;
+    public GameObject[] nightMobs;
 
     public float outerRadius = 128f;
 
@@ -22,17 +25,26 @@ public class SpawnManager : MonoBehaviour
 
     public float despawnProbability = 0.029f;
     
-    private Transform playerTransform;
+    public Transform playerTransform;
 
     public int entityCap = 70;
 
     void Start()
     {
-        playerTransform = transform;
+        //playerTransform = transform;
     }
 
     private void Update()
     {
+        if (GameManager.instance.isNight)
+        {
+            mobPrefab = nightMobs;
+        }
+        else
+        {
+            mobPrefab = dayMobs;
+        }
+        
         if (Input.GetKeyDown(KeyCode.O))
         {
             SpawnMob();
@@ -87,7 +99,7 @@ public class SpawnManager : MonoBehaviour
         
 
         Vector3 directionToPlayer = playerTransform.position - spawnPos;
-        if (Vector3.Dot(directionToPlayer.normalized, transform.forward) < 0f)
+        if (Vector3.Dot(directionToPlayer.normalized, playerTransform.forward) < 0f)
             return false;
 
         int x = Random.Range(0, mobPrefab.Length - 1);
@@ -96,7 +108,7 @@ public class SpawnManager : MonoBehaviour
     
         mobs.Add(mob);
 
-        float distancia = Vector3.Distance(spawnPos, transform.position);
+        float distancia = Vector3.Distance(spawnPos, playerTransform.position);
     
         handle(distancia, mob);
 
@@ -117,7 +129,7 @@ public class SpawnManager : MonoBehaviour
             //Debug.Log("Despawneo");
             
             Vector3 directionToPlayer = playerTransform.position - mob.transform.position;
-            if (Vector3.Dot(directionToPlayer.normalized, transform.forward) > 0f)
+            if (Vector3.Dot(directionToPlayer.normalized, playerTransform.forward) > 0f)
             {
                 Destroy(mob);
             }
