@@ -32,19 +32,11 @@ public class SpawnManager : MonoBehaviour
     void Start()
     {
         //playerTransform = transform;
+        mobPrefab = dayMobs;
     }
 
     private void Update()
     {
-        if (GameManager.instance.isNight)
-        {
-            mobPrefab = nightMobs;
-        }
-        else
-        {
-            mobPrefab = dayMobs;
-        }
-        
         if (Input.GetKeyDown(KeyCode.O))
         {
             SpawnMob();
@@ -102,7 +94,9 @@ public class SpawnManager : MonoBehaviour
         if (Vector3.Dot(directionToPlayer.normalized, playerTransform.forward) < 0f)
             return false;
 
-        int x = Random.Range(0, mobPrefab.Length - 1);
+        int x = Random.Range(0, mobPrefab.Length);
+        
+        //Debug.Log(x);
     
         GameObject mob = Instantiate(mobPrefab[x], spawnPos, Quaternion.identity);
     
@@ -111,6 +105,15 @@ public class SpawnManager : MonoBehaviour
         float distancia = Vector3.Distance(spawnPos, playerTransform.position);
     
         handle(distancia, mob);
+        
+        if (GameManager.instance.isNight)
+        {
+            mobPrefab = nightMobs;
+        }
+        else
+        {
+            mobPrefab = dayMobs;
+        }
 
         return true;
     }

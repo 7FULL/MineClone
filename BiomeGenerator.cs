@@ -35,6 +35,9 @@ public class BiomeGenerator : MonoBehaviour
             groundPosition = GetSurfaceHeightNoise(data.worldPosition.x + x, data.worldPosition.z + z, data.chunkHeight);
         else
             groundPosition = terrainHeightNoise.Value;
+        
+        //Asi nos ahorramos andar con numeros negativos en los ores
+        //groundPosition += 50;
 
         for (int y = data.worldPosition.y; y < data.worldPosition.y + data.chunkHeight; y++)
         {
@@ -71,6 +74,8 @@ public class BiomeGenerator : MonoBehaviour
 
         terrainHeight = MyNoise.Redistribution(terrainHeight, biomeNoiseSettings);
         int surfaceHeight = MyNoise.RemapValue01ToInt(terrainHeight, 0, chunkHeight);
-        return surfaceHeight;
+        
+        //Asi nos ahorramos andar con numeros negativos en los ores
+        return surfaceHeight+50;
     }
 }
