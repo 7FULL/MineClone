@@ -10,6 +10,8 @@ using UnityEngine.Events;
 
 public class World : MonoBehaviour
 {
+    public static int maxBuildLimit = 256;
+    
     public int chunkSize = 16, chunkHeight = 100;
     public int chunkDrawingRange = 8;
     
