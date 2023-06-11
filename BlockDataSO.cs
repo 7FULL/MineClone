@@ -25,5 +25,8 @@ public class Block
     public bool isGravitationalBlock = false;
 
     public bool transparent = false;
-}
+    
+    public Tool tool;
 
+    public ToolType toolType = ToolType.PICKAGUE;
+}

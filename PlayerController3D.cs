@@ -11,6 +11,8 @@ using Random = UnityEngine.Random;
 
 public class PlayerController3D : Entity
 {
+    private Block blockBreaking = null;
+    
     public float maxSpeed = 9f;
     
     public float walkingSpeed = 7.5f;
@@ -127,13 +129,25 @@ public class PlayerController3D : Entity
     public Transform itemsFather;
 
     public RectTransform activeItemBox;
+    
+    public ToolData toolData;
+
+    public GameObject canvasCargando;
+
+    private void OnEnable()
+    {
+        
+    }
 
     void Start()
     {
+        canvasCargando = GameManager.instance.canvasCargando;
+
+        transform.position = new Vector3(PlayerPrefs.GetInt("x"), 256, PlayerPrefs.GetInt("y"));
+        
         startedTime = attackSpeed;
         
         rb = GetComponent<Rigidbody>();
-        
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -227,6 +241,16 @@ public class PlayerController3D : Entity
 
     void Update()
     {
+        if (grounded.isGrounded)
+        {
+            canvasCargando.SetActive(false);
+        }
+        
+        if (transform.position.y < -10)
+        {
+            transform.position = new Vector3(transform.position.x, 256, transform.position.z);
+        }
+        
         if (Input.GetAxisRaw("Mouse ScrollWheel") < 0 && !inventoryGameObject.activeInHierarchy)
         {
             itemIndex++;
@@ -318,29 +342,70 @@ public class PlayerController3D : Entity
             
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
-        if (attackSpeed <= 0 && Input.GetMouseButton(0))
+        if (attackSpeed <= 0 && (Input.GetMouseButton(0)))
         {
             if (Physics.Raycast(ray, out RaycastHit hit2, reachDistance))
             {
                 if (hit2.collider.gameObject.GetComponent<Entity>() != null)
                 {
                     atacado = true;
+
+                    if (actualItem != null)
+                    {
+                        if (!actualItem.item.isTool)
+                        {
+                            hit2.collider.gameObject.GetComponent<Entity>().takeDamage(1);
+                            hit2.collider.gameObject.GetComponent<Entity>().Jump((transform.forward*0.5f+Vector3.up));
+                            hit2.collider.gameObject.GetComponent<Entity>().huir();
+                        }else if (actualItem.item.toolType == ToolType.SWORD)
+                        {
+                            int damage = 0;
+
+                            for (int i = 0; i < toolData.toolDataList.Count; i++)
+                            {
+                                if (toolData.toolDataList[i].tool == actualItem.item.tool)
+                                {
+                                    damage = toolData.toolDataList[i].damage;
+                                    actualItem.item.durability--;
+
+                                    if (actualItem.item.durability <= 0)
+                                    {
+                                        usedItem();
+                                    }
+                                }   
+                            }
                         
-                    hit2.collider.gameObject.GetComponent<Entity>().takeDamage(1);
-                    hit2.collider.gameObject.GetComponent<Entity>().Jump((transform.forward*0.5f+Vector3.up));
-                    hit2.collider.gameObject.GetComponent<Entity>().huir();
+                            hit2.collider.gameObject.GetComponent<Entity>().takeDamage(1+damage);
+                            hit2.collider.gameObject.GetComponent<Entity>().Jump((transform.forward*0.5f+Vector3.up));
+                            hit2.collider.gameObject.GetComponent<Entity>().huir();
+                        }
+                    }
+                    else
+                    {
+                        hit2.collider.gameObject.GetComponent<Entity>().takeDamage(1);
+                        hit2.collider.gameObject.GetComponent<Entity>().Jump((transform.forward*0.5f+Vector3.up));
+                        hit2.collider.gameObject.GetComponent<Entity>().huir();
+                    }
                 }
             }
             attackSpeed = startedTime;
         }
         
-        if (Input.GetMouseButton(0) && !atacado)
+        if ((Input.GetMouseButton(0)) && !atacado && !inventoryGameObject.activeInHierarchy)
         {
             if (Physics.Raycast(ray, out RaycastHit hit, reachDistance, groundMask))
             {
                 romperSprite.gameObject.SetActive(true);
 
                 BlockType blockType = world.GetBlock(hit);
+
+                for (int i = 0; i < GameManager.instance.blockData.blockDataList.Count; i++)
+                {
+                    if (GameManager.instance.blockData.blockDataList[i].blockType == blockType)
+                    {
+                        blockBreaking = GameManager.instance.blockData.blockDataList[i];
+                    }
+                }
                 
                 lookingBlockPos = world.GetBlockPos(hit);
                 
@@ -370,7 +435,7 @@ public class PlayerController3D : Entity
                     GameObject drop = null;
                         
                     if (blockTypeToCompare != BlockType.AIR && blockTypeToCompare != BlockType.WATER && blockTypeToCompare != BlockType.NOTHING
-                        && blockTypeToCompare != BlockType.TREE_LEAFS_SOLID && blockTypeToCompare != BlockType.TREE_LEAFES_TRANSPARENT)
+                        && blockTypeToCompare != BlockType.TREE_LEAFS_SOLID && blockTypeToCompare != BlockType.TREE_LEAFES_TRANSPARENT && blockTypeToCompare != null)
                     {
                         GameObject x = Instantiate(romperParticulas, lookingBlockPos, Quaternion.identity);
 
@@ -725,11 +790,40 @@ public class PlayerController3D : Entity
             }
         }
         
-        if (breakingBlock)
+        if (breakingBlock && blockBreaking != null)
         {
-            if (resistanceBlock > 0)
+            if (actualItem != null)
             {
-                resistanceBlock--;
+                if (!actualItem.item.isTool)
+                {
+                    if (resistanceBlock > 0)
+                    {
+                        resistanceBlock --;
+                    }
+                }else if (actualItem.item.tool == blockBreaking.tool)
+                {
+                    int damage = 0;
+
+                    for (int i = 0; i < toolData.toolDataList.Count; i++)
+                    {
+                        if (toolData.toolDataList[i].tool == actualItem.item.tool)
+                        {
+                            damage = toolData.toolDataList[i].damage;
+                        }   
+                    }
+                
+                    if (resistanceBlock > 0)
+                    {
+                        resistanceBlock -= damage+1;
+                    }
+                }
+            }
+            else
+            {
+                if (resistanceBlock > 0)
+                {
+                    resistanceBlock --;
+                }
             }
 
             float x = resistanceBlockAux / romperFotos.Length;
@@ -757,16 +851,26 @@ public class PlayerController3D : Entity
                 fotosSprites[i].sprite = romperFotos[indexFoto];
             }
             
-            if (resistanceBlock == 0)
+            if (resistanceBlock <= 0)
             {
                 broken = true;
                 for (int i = 0; i < fotosSprites.Length; i++)
                 {
                     fotosSprites[i].sprite = romperFotos[0];
                 }
+
+                if (actualItem != null && actualItem.item.isTool)
+                {
+                    actualItem.item.durability--;
+                    
+                    if (actualItem.item.durability <= 0)
+                    {
+                        usedItem();
+                    }
+                }
             }
         }
-        }
+    }
 
     private void ModifyTerrain(RaycastHit hit, BlockType blockType)
     {

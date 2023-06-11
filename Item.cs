@@ -16,6 +16,13 @@ public class Item : ScriptableObject,Interactable
     public bool isPlacable = true;
 
     public bool interactable = false;
+
+    public bool isTool = false;
+
+    public int durability = 10;
+
+    public Tool tool;
+    public ToolType toolType;
     public void interact(Vector3Int posicion = new Vector3Int(), RaycastHit hit = default)
     {
         InteractableManager.instance.Interact(this,posicion, hit);

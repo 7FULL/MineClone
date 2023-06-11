@@ -28,6 +28,7 @@ public class BiomeGenerator : MonoBehaviour
 
     public ChunkData ProcessChunkColumn(ChunkData data, int x, int z, Vector2Int mapSeedOffset, int? terrainHeightNoise)
     {
+        //biomeNoiseSettings.offest = offset;
         biomeNoiseSettings.worldOffset = mapSeedOffset;
 
         int groundPosition;
@@ -37,7 +38,7 @@ public class BiomeGenerator : MonoBehaviour
             groundPosition = terrainHeightNoise.Value;
 
         //Asi nos ahorramos andar con numeros negativos en los ores
-        groundPosition += 50;
+        groundPosition += 35;
 
         for (int y = data.worldPosition.y; y < data.worldPosition.y + data.chunkHeight; y++)
         {
@@ -45,7 +46,7 @@ public class BiomeGenerator : MonoBehaviour
             /*if (!startLayerHandler.isAuxiliarWaterHandler)
             {
                 startLayerHandler.Handle(data, x, y, z, groundPosition, mapSeedOffset);
-            }
+            }   
             else
             {
                 int auxgroundPosition = GetSurfaceHeightNoise(data.worldPosition.x + x, data.worldPosition.z + z, data.chunkHeight);
