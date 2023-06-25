@@ -35,6 +35,8 @@ public class Animal : Entity
 
     public int actualLife = 10;
 
+    public Animator anim;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -97,6 +99,8 @@ public class Animal : Entity
 
     private void MoveTowardsDestination()
     {
+        anim.SetBool("moverse",true);
+        
         Vector3 direction = destination - transform.position;
         direction.y = 0;
         direction.Normalize();
@@ -228,6 +232,7 @@ public class Animal : Entity
 
     private void stop()
     {
+        anim.SetBool("moverse",false);
         //Debug.Log("Parado");
 
         timesJumped = 0;

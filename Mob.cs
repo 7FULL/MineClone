@@ -40,6 +40,8 @@ public class Mob : Entity
     private int cooldown = 0;
 
     public int attackSpeed = 100;   //2 Segundos
+    
+    public Animator anim;
 
     void Start()
     {
@@ -109,6 +111,8 @@ public class Mob : Entity
             stop();
             GameManager.instance.player.GetComponent<PlayerController3D>().takeDamage(damage);
 
+            anim.SetTrigger("atacar");
+            
             cooldown = attackSpeed;
         }
     }
@@ -128,6 +132,8 @@ public class Mob : Entity
 
     private void MoveTowardsDestination()
     {
+        anim.SetBool("moverse",true);
+        
         Vector3 direction = destination - transform.position;
         direction.y = 0;
         direction.Normalize();
@@ -259,6 +265,7 @@ public class Mob : Entity
 
     private void stop()
     {
+        anim.SetBool("moverse",false);
         //Debug.Log("Parado");
 
         timesJumped = 0;

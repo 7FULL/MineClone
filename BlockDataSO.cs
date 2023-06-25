@@ -26,7 +26,12 @@ public class Block
 
     public bool transparent = false;
     
-    public Tool tool;
+    public Tool[] tool;
+
+    public bool wood = false;
+    public bool stone = true;
+    public bool sand = false;
+    public bool grass = false;
 
     public ToolType toolType = ToolType.PICKAGUE;
 }

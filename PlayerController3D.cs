@@ -11,6 +11,11 @@ using Random = UnityEngine.Random;
 
 public class PlayerController3D : Entity
 {
+    public AudioClip[] sonidoPiedra;
+    public AudioClip[] sonidoMadera;
+    public AudioClip[] sonidoTierra;
+    public AudioClip[] sonidoArena;
+
     private Block blockBreaking = null;
     
     public float maxSpeed = 9f;
@@ -134,6 +139,12 @@ public class PlayerController3D : Entity
 
     public GameObject canvasCargando;
 
+    private int durability = 10;
+
+    private DragDropItem lastItem;
+
+    public GameObject opciones;
+
     private void OnEnable()
     {
         
@@ -144,7 +155,7 @@ public class PlayerController3D : Entity
         canvasCargando = GameManager.instance.canvasCargando;
 
         transform.position = new Vector3(PlayerPrefs.GetInt("x"), 256, PlayerPrefs.GetInt("y"));
-        
+
         startedTime = attackSpeed;
         
         rb = GetComponent<Rigidbody>();
@@ -239,6 +250,27 @@ public class PlayerController3D : Entity
         Cursor.visible = true;
     }
 
+    public void option()
+    {
+        if (opciones.activeInHierarchy)
+        {
+            opciones.SetActive(false);
+            ableToMove = true;
+            Cursor.lockState = CursorLockMode.Locked;
+            ableToMove = true;
+            Cursor.visible = false;
+        }
+        else
+        {
+            opciones.SetActive(true);
+            rb.velocity = new Vector3(0, 0, 0);
+            ableToMove = true;
+            Cursor.lockState = CursorLockMode.None;
+            ableToMove = false;
+            Cursor.visible = true;
+        }
+    }
+
     void Update()
     {
         if (grounded.isGrounded)
@@ -289,6 +321,11 @@ public class PlayerController3D : Entity
             }
             
             //EquipItem(itemIndex);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            option();
         }
         
         if (Input.GetKeyDown(KeyCode.Tab))
@@ -357,7 +394,7 @@ public class PlayerController3D : Entity
                             hit2.collider.gameObject.GetComponent<Entity>().takeDamage(1);
                             hit2.collider.gameObject.GetComponent<Entity>().Jump((transform.forward*0.5f+Vector3.up));
                             hit2.collider.gameObject.GetComponent<Entity>().huir();
-                        }else if (actualItem.item.toolType == ToolType.SWORD)
+                        }else
                         {
                             int damage = 0;
 
@@ -365,10 +402,15 @@ public class PlayerController3D : Entity
                             {
                                 if (toolData.toolDataList[i].tool == actualItem.item.tool)
                                 {
-                                    damage = toolData.toolDataList[i].damage;
-                                    actualItem.item.durability--;
+                                    if (actualItem.item.toolType == ToolType.SWORD)
+                                    {
+                                        damage = toolData.toolDataList[i].damage;
+                                    }
+                                    
+                                    lastItem = actualItem;
+                                    durability--;
 
-                                    if (actualItem.item.durability <= 0)
+                                    if (durability <= 0)
                                     {
                                         usedItem();
                                     }
@@ -466,6 +508,25 @@ public class PlayerController3D : Entity
                     }
                         
                     ModifyTerrain(hit, BlockType.AIR);
+                    if (blockBreaking.wood)
+                    {
+                        AudioManager.Instance.play(sonidoMadera[Random.Range(0,sonidoMadera.Length)]);
+                    }
+                            
+                    if (blockBreaking.stone)
+                    {
+                        AudioManager.Instance.play(sonidoPiedra[Random.Range(0,sonidoPiedra.Length)]);
+                    }
+                            
+                    if (blockBreaking.grass)
+                    {
+                        AudioManager.Instance.play(sonidoTierra[Random.Range(0,sonidoTierra.Length)]);
+                    }
+                            
+                    if (blockBreaking.sand)
+                    {
+                        AudioManager.Instance.play(sonidoArena[Random.Range(0,sonidoArena.Length)]);
+                    }
 
                     if (drop != null)
                     {
@@ -527,9 +588,8 @@ public class PlayerController3D : Entity
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,0,-minDistanceToPlace))&&
                         Vector3Int.RoundToInt(aux) != Vector3Int.RoundToInt(transform.position+new Vector3(0,-minDistanceToPlace,0)))
                     {
-                        if (actualItem != GameManager.instance.defaultItem && actualItem != null)
+                        if (actualItem != GameManager.instance.defaultItem && actualItem != null && actualItem.item.isPlacable)
                         {
-                                
                             ModifyTerrain(hit, actualItem.item.BlockType, aux);
 
                             int x = items[itemIndex].restarCantidad(1);
@@ -539,6 +599,28 @@ public class PlayerController3D : Entity
                             if (x == 0)
                             {
                                 handedItem.sprite = GameManager.instance.invisibleSprite;
+                            }
+
+                            Block block = GameManager.instance.getBlockData(actualItem.item.BlockType);
+                            
+                            if (block.wood)
+                            {
+                                AudioManager.Instance.play(sonidoMadera[Random.Range(0,sonidoMadera.Length)]);
+                            }
+                            
+                            if (block.stone)
+                            {
+                                AudioManager.Instance.play(sonidoPiedra[Random.Range(0,sonidoPiedra.Length)]);
+                            }
+                            
+                            if (block.grass)
+                            {
+                                AudioManager.Instance.play(sonidoTierra[Random.Range(0,sonidoTierra.Length)]);
+                            }
+                            
+                            if (block.sand)
+                            {
+                                AudioManager.Instance.play(sonidoArena[Random.Range(0,sonidoArena.Length)]);
                             }
                         }
                         else
@@ -574,7 +656,6 @@ public class PlayerController3D : Entity
         {
             handedItem.sprite = GameManager.instance.invisibleSprite;
         }
-        
     }
 
     public override void Jump(Vector3 x)
@@ -601,6 +682,10 @@ public class PlayerController3D : Entity
         if (items[index] != null)
         {
             handedItem.sprite = items[index].item.sprite;
+            if (lastItem != actualItem)
+            {
+                durability = items[index].item.durability;
+            }
         }
         else
         {
@@ -800,21 +885,38 @@ public class PlayerController3D : Entity
                     {
                         resistanceBlock --;
                     }
-                }else if (actualItem.item.tool == blockBreaking.tool)
+                }
+                else
                 {
-                    int damage = 0;
-
-                    for (int i = 0; i < toolData.toolDataList.Count; i++)
+                    if (blockBreaking.toolType == actualItem.item.toolType && blockBreaking.tool.Length > 0)
                     {
-                        if (toolData.toolDataList[i].tool == actualItem.item.tool)
+                        for (int j = 0; j < blockBreaking.tool.Length; j++)
                         {
-                            damage = toolData.toolDataList[i].damage;
-                        }   
-                    }
+                            if (actualItem.item.tool == blockBreaking.tool[j])
+                            {
+                                int damage = 0;
+
+                                for (int i = 0; i < toolData.toolDataList.Count; i++)
+                                {
+                                    if (toolData.toolDataList[i].tool == actualItem.item.tool)
+                                    {
+                                        damage = toolData.toolDataList[i].damage;
+                                    }   
+                                }
                 
-                    if (resistanceBlock > 0)
+                                if (resistanceBlock > 0)
+                                {
+                                    resistanceBlock -= damage+1;
+                                }
+                            }
+                        }
+                    }
+                    else
                     {
-                        resistanceBlock -= damage+1;
+                        if (resistanceBlock > 0)
+                        {
+                            resistanceBlock --;
+                        }
                     }
                 }
             }
@@ -861,11 +963,13 @@ public class PlayerController3D : Entity
 
                 if (actualItem != null && actualItem.item.isTool)
                 {
-                    actualItem.item.durability--;
+                    lastItem = actualItem;
+                    durability--;
                     
-                    if (actualItem.item.durability <= 0)
+                    if (durability <= 0)
                     {
                         usedItem();
+                        updateHandSlots();
                     }
                 }
             }

@@ -59,5 +59,7 @@ public enum BlockType
     GOLD_ORE,
     HIERRO_ORE,
     CARBON_ORE,
-    LAPISLAZULI_ORE
+    LAPISLAZULI_ORE,
+    BEDROCK,
+    CERDO
 }

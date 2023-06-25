@@ -44,7 +44,7 @@ public class InteractableManager : MonoBehaviour
                 player.stop();
                 break;
             //El filete de momento es un bloque de adoquin por que todavia no lo hemos metido xDD
-            case BlockType.BLOQUE_ADOQUIN:
+            case BlockType.CERDO:
                 bool x = player.eat(1);
                 if (x)
                 {
